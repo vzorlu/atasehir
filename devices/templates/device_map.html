@@ -1,0 +1,56 @@
+{% extends layout_path %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}Cihaz Konumları{% endblock %}
+
+{% block vendor_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'vendor/libs/leaflet/leaflet.css' %}" />
+{% endblock vendor_css %}
+
+{% block vendor_js %}
+{{ block.super }}
+<script src="{% static 'vendor/libs/leaflet/leaflet.js' %}"></script>
+<script>
+  $(document).ready(function () {
+    // Harita Oluşturma
+    var map = L.map('layerControl').setView([39.9334, 32.8597], 6);  // Başlangıç noktası Türkiye
+
+    // CartoDB Dark Matter haritası ekleme (dark mod)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CartoDB</a> contributors',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Haritaya işaret ekleme örneği
+    L.marker([39.9334, 32.8597]).addTo(map)
+      .bindPopup('Bir cihaz burada bulunuyor')
+      .openPopup();
+  });
+</script>
+{% endblock vendor_js %}
+
+{% block page_js %}
+{{ block.super }}
+<script src="{% static 'js/maps-leaflet.js' %}"></script>
+{% endblock page_js %}
+
+{% block content %}
+<div class="row">
+
+
+  <!-- Layer Control -->
+  <div class="col-12">
+    <div class="card">
+      <h5 class="card-header">AI Cihaz Konumları</h5>
+      <div class="card-body">
+        <div class="leaflet-map" id="layerControl"></div>
+      </div>
+    </div>
+  </div>
+  <!-- /Layer Control -->
+</div>
+{% endblock %}

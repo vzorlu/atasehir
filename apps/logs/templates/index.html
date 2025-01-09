@@ -1,0 +1,44 @@
+{% extends layout_path %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}Dashboard - CRM{% endblock title %}
+
+{% block vendor_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
+{% endblock vendor_css %}
+
+{% block vendor_js %}
+{{ block.super }}
+<script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
+{% endblock vendor_js %}
+
+{% block page_js %}
+{{ block.super }}
+<script src="{% static 'js/dashboards-crm.js' %}"></script>
+{% endblock page_js %}
+
+{% block content %}
+<div class="row g-6">
+
+  <!-- Revenue Growth -->
+  <div class="col-xxl-4 col-md-7">
+    <div class="card h-100">
+      <div class="card-body d-flex justify-content-between">
+        <div class="d-flex flex-column me-xl-7">
+          <div class="card-title mb-auto">
+            <h5 class="mb-2 text-nowrap">Ubuntu</h5>
+            <p class="mb-0">Ubuntu is a Linux-based operating system. It is designed for computers, smartphones, and network servers. ...
+            </p>
+          </div>
+
+        </div>
+        <div>img</div>
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

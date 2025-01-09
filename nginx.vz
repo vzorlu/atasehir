@@ -1,0 +1,42 @@
+server {
+    server_name hub.algi.ai;
+
+    # Favicon.ico is excluded from logs for cleanliness
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    # Serving static files
+  location /static/ {
+    alias /var/www/html/hub/algi-web-studio/staticfiles/;
+}
+
+location /media/ {
+    alias /var/www/html/hub/algi-web-studio/media/;
+}
+
+
+    # Gunicorn socket
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/hub.algi.ai/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/hub.algi.ai/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = hub.algi.ai) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name hub.algi.ai;
+    return 404; # managed by Certbot
+
+
+}

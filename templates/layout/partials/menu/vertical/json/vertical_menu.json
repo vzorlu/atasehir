@@ -1,0 +1,85 @@
+{
+  "menu": [
+    {
+      "url": "index",
+      "icon": "menu-icon tf-icons ti ti-smart-home",
+      "name": "Dashboard",
+      "slug": "dashboard-analytics"
+    },
+    {
+      "url": "dashboard-models",
+      "name": "Hazır Modeller",
+      "slug": "dashboard-models",
+      "icon": "menu-icon tf-icons ti ti-checkbox"
+    },
+    {
+      "url": "services-sources",
+      "name": "Kaynaklar",
+      "slug": "dashboard-source",
+      "icon": "menu-icon tf-icons ti ti-video"
+    },
+    {
+      "url": "dashboard-models",
+      "name": "Kural Ekle",
+      "slug": "dashboard-models",
+      "icon": "menu-icon tf-icons ti ti-checkbox"
+    },
+    {
+      "name": "Cihazlar",
+      "icon": "menu-icon tf-icons ti ti-ai",
+      "submenu": [
+        {
+          "url": "devices-list",
+          "name": "Liste",
+          "slug": "devices-list"
+        },
+        {
+          "url": "device-map",
+          "name": "Canlı Konum",
+          "slug": "devices"
+        }
+      ]
+    },
+    {
+      "url": "report",
+      "name": "Raporlar",
+      "slug": "report",
+      "icon": "menu-icon tf-icons ti ti-report"
+    },
+    {
+      "name": "Alarm",
+      "icon": "menu-icon tf-icons ti ti-alarm",
+      "slug": "alarm",
+      "submenu": [
+        {
+          "url": "notification",
+          "name": "Listeler",
+          "slug": "notification"
+        },
+        {
+          "url": "notification-channels",
+          "name": "Bildirim Kanalları",
+          "slug": "notification-channels"
+        }
+      ]
+    },
+    {
+      "url": "jobs",
+      "name": "Görevler",
+      "slug": "jobs",
+      "icon": "menu-icon tf-icons ti ti-forms"
+    },
+    {
+      "url": "container",
+      "name": "Container",
+      "slug": "container",
+      "icon": "menu-icon tf-icons ti ti-database"
+    },
+    {
+      "url": "logs",
+      "name": "Loglar",
+      "slug": "logs",
+      "icon": "menu-icon tf-icons ti ti-database"
+    }
+  ]
+}
