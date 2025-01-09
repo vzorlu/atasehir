@@ -6,6 +6,8 @@ admin.site.site_header = "Algi Yönetim Paneli"
 admin.site.site_title = "AI Studio"
 admin.site.index_title = "Algi Yönetim Paneli"
 
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 
@@ -110,7 +112,8 @@ urlpatterns = [
 
     path("", include("services.urls")),
 
-
+    # Add stream URLs
+    path('api/stream/', include('apps.stream.urls')),
 ]
 
 handler404 = SystemView.as_view(template_name="pages_misc_error.html", status=404)

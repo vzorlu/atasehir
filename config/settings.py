@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'services',
     'channels',
     'channels.layers',
+    'apps.stream',  # Add this line
 ]
 
 MIDDLEWARE = [
