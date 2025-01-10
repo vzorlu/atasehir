@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+        // Load the image and draw bounding boxes
+        const canvas = new fabric.Canvas('canvas');
+        const imageURL = '22.jpg'; // Replace with the actual image path
+
+        fabric.Image.fromURL(imageURL, function (img) {
+            img.scaleToWidth(canvas.width);
+            img.scaleToHeight(canvas.height);
+            canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+
+            // Detections data
+            const detections = [
+                { id: 62, class_name: "person", x: 9.17, y: 0.13, confidence: 0.796 }
+            ];
+
+            // Draw bounding boxes
+            detections.forEach(detection => {
+                const rect = new fabric.Rect({
+                    left: detection.x * 10, // Scaled x_coord
+                    top: detection.y * 10,  // Scaled y_coord
+                    width: 50, // Adjust the width of the bounding box if available
+                    height: 50, // Adjust the height of the bounding box if available
+                    fill: 'transparent',
+                    stroke: 'blue', // Set stroke color to blue
+                    strokeWidth: 2
+                });
+
+                // Add text label
+                const label = new fabric.Text(detection.class_name, {
+                    left: detection.x * 10,
+                    top: (detection.y * 10) - 20,
+                    fontSize: 14,
+                    fill: 'blue'
+                });
+
+                canvas.add(rect, label);
+            });
+        });
+    </script>
+</body>
+</html>

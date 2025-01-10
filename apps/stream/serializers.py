@@ -11,4 +11,4 @@ class StreamImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StreamImage
-        fields = ['id', 'image', 'timestamp', 'processed', 'detections']
+        fields = ['id', 'image', 'timestamp', 'processed', 'lang', 'long', 'uuid', 'fulladdress', 'detections']
