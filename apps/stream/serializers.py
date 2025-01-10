@@ -7,8 +7,6 @@ class DetectionSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'class_name', 'x_coord', 'y_coord', 'confidence', 'timestamp']
 
 class StreamImageSerializer(serializers.ModelSerializer):
-    detections = DetectionSerializer(many=True, read_only=True, source='detection_set')
-
     class Meta:
         model = StreamImage
-        fields = ['id', 'image', 'timestamp', 'processed', 'lang', 'long', 'uuid', 'fulladdress', 'detections']
+        fields = ['id', 'image', 'timestamp', 'processed', 'lang', 'long', 'fulladdress', 'device_uuid']

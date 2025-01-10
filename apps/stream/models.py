@@ -7,7 +7,7 @@ class StreamImage(models.Model):
     lang = models.FloatField(null=True, blank=True)
     long = models.FloatField(null=True, blank=True)
     fulladdress = models.TextField(null=True, blank=True)
-    device_uuid = models.TextField(editable=False, unique=True)
+    device_uuid = models.CharField(max_length=255, editable=False, unique=True)
 
     def __str__(self):
         return f"StreamImage {self.id} - {self.timestamp}"
