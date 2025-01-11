@@ -16,7 +16,7 @@ class StreamImageAdmin(admin.ModelAdmin):
 
 @admin.register(Detection)
 class DetectionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'image', 'class_name', 'x_coord', 'y_coord', 'confidence', 'timestamp')
+    list_display = ('id', 'image', 'class_name', 'x_coord', 'y_coord', 'confidence', 'timestamp', 'deviceuuid')
     list_filter = ('class_name', 'timestamp')
     search_fields = ('class_name', 'image__id')
     readonly_fields = ('timestamp',)
