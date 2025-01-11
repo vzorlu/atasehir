@@ -4,16 +4,7 @@ from .models import StreamImage, Detection
 class StreamImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = StreamImage
-        fields = [
-            'id',
-            'image',
-            'timestamp',
-            'processed',
-            'lang',
-            'long',
-            'fulladdress',
-            'deviceuuid'
-        ]
+        fields = '__all__'
         read_only_fields = ['timestamp', 'processed']
 
 class DetectionSerializer(serializers.ModelSerializer):
