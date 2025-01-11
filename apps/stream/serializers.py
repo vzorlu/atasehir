@@ -7,6 +7,8 @@ class StreamImageSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['timestamp', 'processed']
 
+
+
 class DetectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detection
