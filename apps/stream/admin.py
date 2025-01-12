@@ -5,8 +5,8 @@ from .models import StreamImage, Detection
 class StreamImageAdmin(admin.ModelAdmin):
     list_display = ('id', 'image', 'timestamp', 'processed', 'lang', 'long', 'deviceuuid')
     list_filter = ('processed', 'timestamp')
-    search_fields = ('deviceuuid',)
-    readonly_fields = ('timestamp', 'deviceuuid')
+    search_fields = ('device',)
+    readonly_fields = ('timestamp', 'device')
     ordering = ('-timestamp',)
 
 @admin.register(Detection)
