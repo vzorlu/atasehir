@@ -49,8 +49,8 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             stream_image = serializer.save()
 
             # Process with YOLO
-            model = YOLO('yolov8n.pt', device='gpu')
-            model.conf = 0.5
+            model = YOLO('yolov8n.pt')
+            model.to('cuda')  # Move model to GPU
             # Reset file pointer and read image
             image_file.seek(0)
             image_bytes = image_file.read()
@@ -62,8 +62,8 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             if img_array is None:
                 raise ValueError("Failed to decode image")
 
-            # Run detection
-            results = model(img_array)[0]
+            # Run detection with confidence threshold
+            results = model(img_array, conf=0.5)[0]
 
             # Save detections
             for result in results.boxes.data:
