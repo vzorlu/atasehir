@@ -49,9 +49,8 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             stream_image = serializer.save()
 
             # Process with YOLO
-            model = YOLO('yolov8n.pt')
+            model = YOLO('yolov8n.pt', device='gpu')
             model.conf = 0.5
-            model.device = 'gpu'
             # Reset file pointer and read image
             image_file.seek(0)
             image_bytes = image_file.read()
