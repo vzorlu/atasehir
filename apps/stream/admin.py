@@ -3,9 +3,8 @@ from .models import StreamImage, Detection
 
 @admin.register(StreamImage)
 class StreamImageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'image', 'timestamp', 'processed', 'lang', 'long', 'device')
+    list_display = ('__all__', 'processed', 'timestamp')
     list_filter = ('processed', 'timestamp')
-    search_fields = ('device',)
     readonly_fields = ('timestamp', 'device')
     ordering = ('-timestamp',)
 
