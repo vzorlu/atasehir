@@ -9,4 +9,4 @@ class StreamImageSerializer(serializers.ModelSerializer):
 class DetectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detection
-        fields =  '__all__'
+        fields = '__all__'

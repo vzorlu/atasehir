@@ -3,11 +3,11 @@ from django.db import models
 class StreamImage(models.Model):
     image = models.ImageField(upload_to='stream_images/')
     timestamp = models.DateTimeField(auto_now_add=True)
-    processed = models.BooleanField(default=True)
+    processed = models.BooleanField(default=False)
     lang = models.FloatField(null=True, blank=True)
     long = models.FloatField(null=True, blank=True)
     fulladdress = models.TextField(null=True, blank=True)
-    device = models.CharField(max_length=255)
+    deviceuuid = models.CharField(max_length=255, null=True, blank=True)  # Renamed from 'device'
 
     def __str__(self):
         return f"StreamImage {self.id} - {self.timestamp}"
