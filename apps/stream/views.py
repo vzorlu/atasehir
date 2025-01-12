@@ -1,11 +1,15 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view
+import logging
 from .models import StreamImage, Detection
 from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 import cv2
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 class StreamImageViewSet(viewsets.ModelViewSet):
     queryset = StreamImage.objects.all()
@@ -69,3 +73,10 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 class DetectionViewSet(viewsets.ModelViewSet):
     queryset = Detection.objects.all()
     serializer_class = DetectionSerializer
+
+@api_view(['GET'])
+def debug_view(request):
+    logger.info(f"Headers: {request.headers}")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Data: {request.data}")
+    return Response({"status": "debug info logged"})
