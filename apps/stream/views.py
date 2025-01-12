@@ -6,6 +6,8 @@ from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import torch
+from .models import save_processed_image  # Import the save function
 
 class StreamImageViewSet(viewsets.ModelViewSet):
     queryset = StreamImage.objects.all()
@@ -29,7 +31,8 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
             # Process with YOLO
             model = YOLO('yolov8n.pt')
-
+            model.conf = 0.5
+            model.device = 'cuda' if torch.cuda.is_available() else 'cpu'
             # Reset file pointer and read image
             image_file.seek(0)
             image_bytes = image_file.read()
@@ -44,7 +47,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             # Run detection
             results = model(img_array)[0]
 
-            # Save detections
+            # Draw detections on the image
             for result in results.boxes.data:
                 Detection.objects.create(
                     image=stream_image,
@@ -53,9 +56,15 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                     y_coord=float(result[1]),
                     confidence=float(result[4])
                 )
+                # Draw bounding box
+                cv2.rectangle(img_array, (int(result[0]), int(result[1])), (int(result[2]), int(result[3])), (0, 255, 0), 2)
 
-            stream_image.processed = True
-            stream_image.save()
+            # Save the processed image
+            processed_image_path = save_processed_image(img_array)
+            if processed_image_path:
+                stream_image.image_processing = processed_image_path
+                stream_image.processed = True
+                stream_image.save()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

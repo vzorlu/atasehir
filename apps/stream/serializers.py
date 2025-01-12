@@ -26,7 +26,7 @@ class DetectionSerializer(serializers.ModelSerializer):
             'id',
             'image',
             'class_name',
-            'x_coord',
+            'x_coord    ',
             'y_coord',
             'confidence',
             'timestamp',
