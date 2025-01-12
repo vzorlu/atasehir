@@ -8,7 +8,7 @@ class StreamImage(models.Model):
     image = models.ImageField(upload_to='stream_images/')
     image_processing = models.ImageField(upload_to='processed_images/', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    processed = models.BooleanField(default=True)
+    processed = models.BooleanField(default=False)
     lang = models.FloatField(null=True, blank=True)
     long = models.FloatField(null=True, blank=True)
     fulladdress = models.TextField(null=True, blank=True)
@@ -16,6 +16,22 @@ class StreamImage(models.Model):
 
     def __str__(self):
         return f"StreamImage {self.id} - {self.timestamp}"
+
+    def save_processed_image(self, processed_image):
+        try:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f'processed_{timestamp}.jpg'
+            save_path = os.path.join('processed_images', filename)
+
+            cv2.imwrite(save_path, processed_image)
+            self.image_processing = save_path
+            self.processed = True
+            self.save()
+
+            return save_path
+        except Exception as e:
+            print(f"Error saving processed image: {e}")
+            return None
 
 class Detection(models.Model):
     image = models.ForeignKey(StreamImage, on_delete=models.CASCADE)
