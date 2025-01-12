@@ -18,20 +18,29 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         logger.info("Step 1: Incoming data: %s", request.data)
-
         try:
             # Step 2: Validate and save
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            logger.info("Step 2: Validated data: %s", serializer.validated_data)
             stream_image = serializer.save()
-            logger.info("Step 3: Saved initial StreamImage instance")
+            logger.info("Step 2: Validated data, saved StreamImage")
 
-            # Step 4: YOLO detection logic
             image_file = request.FILES.get('image')
             if not image_file:
                 logger.error("No image provided")
                 return Response({"error": "No image provided"}, status=400)
+
+            # Log image info
+            logger.info("Incoming image filename: %s", image_file.name)
+            logger.info("Incoming image size: %s bytes", image_file.size)
+
+            # For safety, log only a small snippet of bytes
+            image_bytes = image_file.read()
+            first_64 = image_bytes[:64].hex()
+            logger.info("Image content (first 64 bytes in hex): %s", first_64)
+
+            # Reset pointer and continue with YOLO
+            image_file.seek(0)
 
             logger.info("Step 4: YOLO detection started")
             # Save image first
