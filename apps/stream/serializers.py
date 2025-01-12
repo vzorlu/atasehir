@@ -9,4 +9,4 @@ class StreamImageSerializer(serializers.ModelSerializer):
 class DetectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detection
-        fields =  '__all__'
+        fields = ['id', 'image', 'class_name', 'x_coord', 'y_coord', 'confidence', 'timestamp']
