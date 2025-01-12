@@ -8,6 +8,9 @@ import cv2
 import numpy as np
 import torch
 from .models import save_processed_image  # Import the save function
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StreamImageViewSet(viewsets.ModelViewSet):
     queryset = StreamImage.objects.all()
@@ -69,6 +72,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            logger.error(f"Error in StreamImageViewSet.create: {e}")
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
