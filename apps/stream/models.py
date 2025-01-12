@@ -6,7 +6,7 @@ from pathlib import Path
 
 class StreamImage(models.Model):
     image = models.ImageField(upload_to='stream_images/')
-    image_processing = models.ImageField(upload_to='processed_images/', null=True, blank=True)  # Make optional
+    image_processing = models.ImageField(upload_to='processed_images/', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     processed = models.BooleanField(default=True)
     lang = models.FloatField(null=True, blank=True)
