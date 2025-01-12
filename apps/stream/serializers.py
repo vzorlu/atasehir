@@ -5,6 +5,9 @@ class StreamImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = StreamImage
         fields = '__all__'
+        extra_kwargs = {
+            'image_processing': {'required': False}  # Make optional
+        }
 
 class DetectionSerializer(serializers.ModelSerializer):
     class Meta:
