@@ -17,11 +17,23 @@ class StreamImageViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
-        # Only handle file logic here, not in GET actions
-        image_file = request.FILES.get('image')
-        if not image_file:
-            return Response({"error": "No image provided"}, status=400)
+        logger.info("Step 1: Incoming data: %s", request.data)
+
         try:
+            # Step 2: Validate and save
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            logger.info("Step 2: Validated data: %s", serializer.validated_data)
+            stream_image = serializer.save()
+            logger.info("Step 3: Saved initial StreamImage instance")
+
+            # Step 4: YOLO detection logic
+            image_file = request.FILES.get('image')
+            if not image_file:
+                logger.error("No image provided")
+                return Response({"error": "No image provided"}, status=400)
+
+            logger.info("Step 4: YOLO detection started")
             # Save image first
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -57,10 +69,14 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
             stream_image.processed = True
             stream_image.save()
+            logger.info("Step 5: YOLO detection completed")
 
+            # Final step: Return response
+            logger.info("Step 6: Returning response")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            logger.error(f"Error in StreamImageViewSet.create: {e}")
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
