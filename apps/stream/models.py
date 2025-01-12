@@ -1,4 +1,8 @@
 from django.db import models
+from datetime import datetime
+import os
+import cv2
+from pathlib import Path
 
 class StreamImage(models.Model):
     image = models.ImageField(upload_to='stream_images/')
@@ -23,3 +27,35 @@ class Detection(models.Model):
 
     def __str__(self):
         return f"Detection {self.id} - {self.class_name}"
+
+def save_processed_image(image, base_path='processed_images'):
+    # Create directory if not exists
+    Path(base_path).mkdir(parents=True, exist_ok=True)
+
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'yolo_processed_{timestamp}.jpg'
+
+    # Full path for saving
+    save_path = os.path.join(base_path, filename)
+
+    try:
+        # Save the processed image
+        cv2.imwrite(save_path, image)
+        return save_path
+    except Exception as e:
+        print(f"Error saving processed image: {e}")
+        return None
+
+# Update existing image_processing function
+def image_processing(frame):
+    try:
+        # ...existing YOLO processing code...
+
+        # After YOLO drawing is complete, save the processed image
+        save_processed_image(frame)
+
+        return frame
+    except Exception as e:
+        print(f"Error in image processing: {e}")
+        return frame
