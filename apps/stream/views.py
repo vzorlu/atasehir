@@ -17,15 +17,11 @@ class StreamImageViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
+        # Only handle file logic here, not in GET actions
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return Response({"error": "No image provided"}, status=400)
         try:
-            # Get and validate image
-            image_file = request.FILES.get('image')
-            if not image_file:
-                return Response(
-                    {'error': 'No image provided'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
             # Save image first
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -69,6 +65,9 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 class DetectionViewSet(viewsets.ModelViewSet):
     queryset = Detection.objects.all()
