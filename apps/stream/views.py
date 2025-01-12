@@ -8,6 +8,7 @@ from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,10 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                     cv2.putText(img_array, f'{box.conf:.2f}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
                 # Save the image with detections
-                output_path = 'path/to/save/detected_image.jpg'
+                original_path = stream_image.image.path
+                directory, filename = os.path.split(original_path)
+                name, ext = os.path.splitext(filename)
+                output_path = os.path.join(directory, f"{name}_det{ext}")
                 cv2.imwrite(output_path, img_array)
 
             # Save detections
