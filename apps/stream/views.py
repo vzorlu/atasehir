@@ -8,7 +8,7 @@ from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 import cv2
 import numpy as np
-import os
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -66,19 +66,21 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             # Run detection with confidence threshold
             results = model(img_array, conf=0.5)[0]
 
+            # Turkish license plate regex pattern
+            plate_pattern = r'^(0[1-9]|[1-7][0-9]|8[01])((\s?[a-zA-Z]\s?)(\d{4,5})|(\s?[a-zA-Z]{2}\s?)(\d{3,4})|(\s?[a-zA-Z]{3}\s?)(\d{2,3}))$'
+
             # Draw bounding boxes if detections are found
             if len(results.boxes) > 0:
                 for box in results.boxes:
-                    x1, y1, x2, y2 = map(int, box.xyxy)
-                    cv2.rectangle(img_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(img_array, f'{box.conf:.2f}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    # Get detected text
+                    detected_text = box.cls  # Assuming text is stored in cls
 
-                # Save the image with detections
-                original_path = stream_image.image.path
-                directory, filename = os.path.split(original_path)
-                name, ext = os.path.splitext(filename)
-                output_path = os.path.join(directory, f"{name}_det{ext}")
-                cv2.imwrite(output_path, img_array)
+                    # Check if detected text matches license plate pattern
+                    if re.match(plate_pattern, detected_text):
+                        x1, y1, x2, y2 = map(int, box.xyxy)
+                        cv2.rectangle(img_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(img_array, f'{detected_text}', (x1, y1 - 10),
+                                  cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
             # Save detections
             for result in results.boxes.data:
