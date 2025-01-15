@@ -15,7 +15,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Sources)
 class SourcesAdmin(admin.ModelAdmin):
-    list_display = ('source_name', 'source_type', 'active')  # Adjust these based on your actual model fields
+    search_fields = ("title", "type")
     search_fields = ('source_name', 'source_type')
     list_filter = ('active', 'source_type')
 
