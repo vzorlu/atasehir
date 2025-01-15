@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from .views import (
     DashboardsView
 )
@@ -20,11 +20,11 @@ urlpatterns = [
     path(
         "dashboard/ready-models/",
         login_required(DashboardsView.as_view(template_name="dashboard_models.html")),
-        name="dashboard-models",
+        name="ready-models",
     ),
     path(
-        "dashboard/task/",
-        login_required(DashboardsView.as_view(template_name="dashboard_task.html")),
-        name="dashboard-task",
+        "rules/",
+        login_required(DashboardsView.as_view(template_name="rules.html")),
+        name="rules",
     )
 ]

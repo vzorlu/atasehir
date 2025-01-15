@@ -18,4 +18,10 @@ urlpatterns = [
             login_required(NotificationsView.as_view(template_name="report.html")),
             name="report",
         ),
+
+        path(
+            "settings",
+            login_required(NotificationsView.as_view(template_name="settings.html")),
+            name="settings",
+        ),
 ]

@@ -7,23 +7,18 @@
       "slug": "dashboard-analytics"
     },
     {
-      "url": "dashboard-models",
-      "name": "Hazır Modeller",
-      "slug": "dashboard-models",
-      "icon": "menu-icon tf-icons ti ti-checkbox"
-    },
-    {
       "url": "services-sources",
-      "name": "Kaynaklar",
+      "name": "Yayın İzleme",
       "slug": "dashboard-source",
       "icon": "menu-icon tf-icons ti ti-video"
     },
     {
-      "url": "dashboard-models",
-      "name": "Kural Ekle",
-      "slug": "dashboard-models",
-      "icon": "menu-icon tf-icons ti ti-checkbox"
+      "url": "report",
+      "name": "Raporlar",
+      "slug": "report",
+      "icon": "menu-icon tf-icons ti ti-report"
     },
+
     {
       "name": "Cihazlar",
       "icon": "menu-icon tf-icons ti ti-ai",
@@ -41,10 +36,10 @@
       ]
     },
     {
-      "url": "report",
-      "name": "Raporlar",
-      "slug": "report",
-      "icon": "menu-icon tf-icons ti ti-report"
+      "url": "rules",
+      "name": "Kural Ekle",
+      "slug": "rules",
+      "icon": "menu-icon tf-icons ti ti-checkbox"
     },
     {
       "name": "Alarm",
@@ -80,6 +75,12 @@
       "name": "Loglar",
       "slug": "logs",
       "icon": "menu-icon tf-icons ti ti-database"
+    },
+    {
+      "url": "settings",
+      "name": "Ayarlar",
+      "slug": "settings",
+      "icon": "menu-icon tf-icons ti ti-settings"
     }
   ]
 }

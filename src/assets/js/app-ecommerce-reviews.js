@@ -25,8 +25,8 @@
   const visitorBarChartEl = document.querySelector('#reviewsChart'),
     visitorBarChartConfig = {
       chart: {
-        height: 160,
-        width: 190,
+        height: 180,
+        width: 240,
         type: 'bar',
         toolbar: {
           show: false

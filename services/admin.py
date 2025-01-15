@@ -15,37 +15,9 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Sources)
 class SourcesAdmin(admin.ModelAdmin):
-    list_display = ('title', 'location', 'url', 'type', 'status', 'has_transition_lines')
-    search_fields = ('title', 'location')
-    list_filter = ('type', 'status', 'is_mobile', 'is_record')
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('title', 'location', 'url', 'type', 'addtype')
-        }),
-        ('Video Properties', {
-            'fields': ('fps', 'resolution', 'width', 'height', 'codec', 'total_frames')
-        }),
-        ('Settings', {
-            'fields': ('is_mobile', 'is_record', 'record_folder', 'status')
-        }),
-        ('Location Information', {
-            'fields': ('inlocation',)
-        }),
-        ('Detection Areas', {
-            'fields': ('polygons', 'polygons_label', 'polygons_color')
-        }),
-        ('Transition Lines', {
-            'fields': ('transition_lines', 'crossing_direction'),
-            'description': 'Define transition lines and their crossing directions'
-        }),
-    )
-    readonly_fields = ('resolution', 'width', 'height', 'fps', 'codec', 'total_frames')
-
-    def has_transition_lines(self, obj):
-        return bool(obj.transition_lines)
-    has_transition_lines.boolean = True
-    has_transition_lines.short_description = 'Has Transition Lines'
-
+    list_display = ('name', 'type', 'status')  # Adjust these fields based on your Sources model
+    search_fields = ('name', 'type')
+    list_filter = ('status', 'type')
 
 @admin.register(models.Services)
 class ServicesAdmin(admin.ModelAdmin):
