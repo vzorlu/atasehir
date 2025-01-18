@@ -15,9 +15,8 @@ class LocationAdmin(admin.ModelAdmin):
 
 @admin.register(Sources)
 class SourcesAdmin(admin.ModelAdmin):
-    search_fields = ("title", "type")
-    search_fields = ('source_name', 'source_type')
-    list_filter = ('active', 'source_type')
+    search_fields = ('title', 'type')
+    list_filter = ('type', 'status', 'is_mobile', 'is_record')
 
 @admin.register(models.Services)
 class ServicesAdmin(admin.ModelAdmin):

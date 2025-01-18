@@ -15,6 +15,7 @@
 <script src="{% static 'vendor/libs/@form-validation/popular.js' %}"></script>
 <script src="{% static 'vendor/libs/@form-validation/bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/@form-validation/auto-focus.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -26,23 +27,63 @@
 {{ block.super }}
 <script src="{% static 'js/pages-auth.js' %}"></script>
 <script src="{% static 'js/ui-popover.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var animContainer = document.getElementById('lottie-container');
+    var animation = null;
+    var animations = [
+      "{% static 'animation3.json' %}",
+      "{% static 'animation2.json' %}",
+      "{% static 'animation.json' %}"
+    ];
+    var currentAnimationIndex = 0;
+
+    function loadAnimation() {
+      if (animation) {
+        animation.destroy();
+      }
+
+      animation = lottie.loadAnimation({
+        container: animContainer,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        path: animations[currentAnimationIndex]
+      });
+
+      animation.addEventListener('complete', function() {
+        currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
+        setTimeout(loadAnimation, 5000); // 5 saniye bekle
+      });
+
+      animation.addEventListener('data_failed', function() {
+        console.error('Animation failed to load');
+        animContainer.innerHTML = '<div class="text-center">Welcome to Ataşehir Belediyesi</div>';
+      });
+    }
+
+    try {
+      loadAnimation();
+    } catch (error) {
+      console.error('Error initializing animation:', error);
+      animContainer.innerHTML = '<div class="text-center">Welcome to Ataşehir Belediyesi</div>';
+    }
+  });
+</script>
 {% endblock page_js %}
 
 {% block content %}
 <div class="authentication-wrapper authentication-cover">
   <!-- Logo -->
   <a href="{% url 'index' %}" class="app-brand auth-cover-brand">
-    <span class="app-brand-logo demo">{% include 'partials/logo.html' with height=20 bgcolor="fill: #fff;" %}</span>
-    <span class="app-brand-text demo text-heading fw-bold">{% get_theme_variables 'template_name' %}</span>
+    Ataşehir Belediyesi AI Platform
   </a>
   <!-- /Logo -->
   <div class="authentication-inner row m-0">
     <!-- /Left Text -->
     <div class="d-none d-lg-flex col-lg-8 p-0">
       <div class="auth-cover-bg auth-cover-bg-color d-flex justify-content-center align-items-center">
-        <img src="{% static 'img/illustrations/auth-login-illustration-' %}{{ COOKIES.style|default:style }}.png" alt="auth-login-cover" class="my-5 auth-illustration" data-app-light-img="illustrations/auth-login-illustration-light.png" data-app-dark-img="illustrations/auth-login-illustration-dark.png">
-
-        <img src="{% static 'img/illustrations/bg-shape-image-' %}{{ COOKIES.style|default:style }}.png" alt="auth-login-cover" class="platform-bg" data-app-light-img="illustrations/bg-shape-image-light.png" data-app-dark-img="illustrations/bg-shape-image-dark.png">
+        <div id="lottie-container" style="width: 100%; height: 100%;"></div>
       </div>
     </div>
     <!-- /Left Text -->
@@ -65,12 +106,28 @@
           {% csrf_token %}
           <div class="mb-6">
             <label for="email" class="form-label">Email yada Kullanıcı Adı</label>
-            <input type="email" class="form-control" id="email" name="email-username" value="" placeholder="Email/Username" autofocus />
+            <input
+              type="text"
+              class="form-control"
+              id="email"
+              name="email-username"
+              autocomplete="username"
+              value=""
+              placeholder="Email/Username"
+              autofocus />
           </div>
           <div class="mb-6 form-password-toggle">
             <label class="form-label" for="password">Şifreniz</label>
             <div class="input-group input-group-merge">
-              <input type="password" id="password" class="form-control" name="password" value="" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" />
+              <input
+                type="password"
+                id="password"
+                class="form-control"
+                name="password"
+                autocomplete="current-password"
+                value=""
+                placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                aria-describedby="password" />
               <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
             </div>
           </div>
