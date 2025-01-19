@@ -168,7 +168,7 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-BASE_URL = os.environ.get("BASE_URL", default="https://atasehir.algi.ai")
+BASE_URL = os.environ.get("BASE_URL", default="http://192.168.1.9:8000")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # OneSignal Bildirim Ayarlar��
@@ -203,6 +203,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://0.0.0.0:8000',
     'https://atasehir.algi.ai',
     'http://148.251.52.194/'
+    'http://192.168.1.9:8000',
 ]
 
 
@@ -247,3 +248,5 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+SECURE_SSL_REDIRECT = False
