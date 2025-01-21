@@ -34,5 +34,7 @@ class Department(models.Model):
     profile = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='council_departments'
+        related_name='council_departments',
+        null=True,
+        blank=True
     )
