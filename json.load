@@ -1,0 +1,67 @@
+[
+    {
+        "type": "way",
+        "id": 4369344,
+        "nodes": [
+            248626530,
+            1909170701,
+            5923031387,
+            26633260,
+            2525573467,
+            241866331,
+            26633264,
+            26633266,
+            1922292469,
+            244017971
+        ],
+        "tags": {
+            "destination": "Edirne;Kadıköy;Harem",
+            "highway": "trunk",
+            "hist_ref": "E5",
+            "loc_name": "E-5",
+            "maxspeed": "80",
+            "name": "Ankara Asfaltı",
+            "oneway": "yes",
+            "ref": "D-100"
+        }
+    },
+    {
+        "type": "way",
+        "id": 4614694,
+        "nodes": [
+            27040295,
+            5921629114,
+            248624201
+        ],
+        "tags": {
+            "highway": "motorway",
+            "lanes": "3",
+            "name": "Kozyatağı O-2 Bağlantısı",
+            "oneway": "yes",
+            "ref": "34-13"
+        }
+    },
+    {
+        "type": "way",
+        "id": 4614714,
+        "nodes": [
+            248621698,
+            241866747,
+            241866748,
+            248621064,
+            9583548149,
+            11786639571,
+            29264333
+        ],
+        "tags": {
+            "highway": "motorway",
+            "lanes": "2",
+            "maxspeed": "130",
+            "name": "O-1-O-2 Çamlıca Bağlantısı",
+            "nat_ref": "O-4",
+            "oneway": "yes",
+            "ref": "O-4",
+            "toll": "no"
+        }
+    }
+]

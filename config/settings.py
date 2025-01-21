@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     'channels',
     'channels.layers',
     'apps.stream',  # Add this line
+    'council',
+    'import_export',  # Add this line
 ]
 
 MIDDLEWARE = [
@@ -250,3 +252,14 @@ LOGGING = {
 }
 
 SECURE_SSL_REDIRECT = False
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 500000
+
+# Import Export Settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+IMPORT_EXPORT_SKIP_ADMIN_LOG = False
+IMPORT_EXPORT_FORMATS = [
+    'xlsx',
+    'xls',
+    'csv',
+    'json',
+]
