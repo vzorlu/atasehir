@@ -8,7 +8,7 @@ from .template import TEMPLATE_CONFIG, THEME_LAYOUT_DIR, THEME_VARIABLES
 load_dotenv()  # Load environment variables from .env.
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get("SECRET_KEY", default='')
+SECRET_KEY = os.environ.get("SECRET_KEY", default="")
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ["*"]
 ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'src' / 'assets',
+    BASE_DIR / "src" / "assets",
 ]
 
 
@@ -61,16 +61,16 @@ INSTALLED_APPS = [
     "apps.jobs",
     "apps.logs",
     "apps.notification",
-    'django_extensions',
-    'rest_framework',
-    'devices',
-    'customer',
-    'services',
-    'channels',
-    'channels.layers',
-    'apps.stream',  # Add this line
-    'council',
-    'import_export',  # Add this line
+    "django_extensions",
+    "rest_framework",
+    "devices",
+    "customer",
+    "services",
+    "channels",
+    "channels.layers",
+    "stream",  # Add this line
+    "council",
+    "import_export",  # Add this line
 ]
 
 MIDDLEWARE = [
@@ -118,12 +118,12 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Update ASGI application path
-ASGI_APPLICATION = 'config.asgi.application'
+ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -174,8 +174,8 @@ BASE_URL = os.environ.get("BASE_URL", default="http://192.168.1.9:8000")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # OneSignal Bildirim Ayarlar��
-ONESIGNAL_APP_ID="0a1a5cc3-275b-4d55-9137-e6304c066af0"
-ONESIGNAL_API_KEY="MjgwNTU2YTQtZGE0MC00ZTc4LTg3MzktYTRlZmM0MzMzM2M4"
+ONESIGNAL_APP_ID = "0a1a5cc3-275b-4d55-9137-e6304c066af0"
+ONESIGNAL_API_KEY = "MjgwNTU2YTQtZGE0MC00ZTc4LTg3MzktYTRlZmM0MzMzM2M4"
 
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -201,11 +201,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://hub.algi.ai",
     "http://20.79.168.164/",
     "http://20.79.168.164:8000",
-    'http://127.0.0.1:8000',
-    'http://0.0.0.0:8000',
-    'https://atasehir.algi.ai',
-    'http://148.251.52.194/'
-    'http://192.168.1.9:8000',
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8000",
+    "https://atasehir.algi.ai",
+    "http://148.251.52.194/http://192.168.1.9:8000",
 ]
 
 
@@ -213,41 +212,35 @@ THEME_LAYOUT_DIR = THEME_LAYOUT_DIR
 TEMPLATE_CONFIG = TEMPLATE_CONFIG
 THEME_VARIABLES = THEME_VARIABLES
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
 }
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
-}
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }
 
@@ -258,8 +251,8 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 500000
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 IMPORT_EXPORT_SKIP_ADMIN_LOG = False
 IMPORT_EXPORT_FORMATS = [
-    'xlsx',
-    'xls',
-    'csv',
-    'json',
+    "xlsx",
+    "xls",
+    "csv",
+    "json",
 ]

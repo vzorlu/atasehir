@@ -13,12 +13,17 @@
       "icon": "menu-icon tf-icons ti ti-video"
     },
     {
-      "url": "report",
+      "url": "detaylar",
       "name": "Raporlar",
-      "slug": "report",
+      "slug": "detaylar",
       "icon": "menu-icon tf-icons ti ti-report"
     },
-
+    {
+      "url": "mahalleler",
+      "name": "Mahalleler",
+      "slug": "mahalleler",
+      "icon": "menu-icon tf-icons ti ti-report"
+    },
     {
       "name": "Cihazlar",
       "icon": "menu-icon tf-icons ti ti-ai",
