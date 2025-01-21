@@ -20,6 +20,7 @@
 <script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -30,6 +31,86 @@
 {% block page_js %}
 {{ block.super }}
 <script src="{% static 'js/extended-ui-star-ratings.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let map;
+    let marker;
+
+    function initMap(lat, lng) {
+        const location = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+        if (!map) {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 15,
+                center: location,
+            });
+        } else {
+            map.setCenter(location);
+        }
+
+        if (marker) {
+            marker.setMap(null);
+        }
+
+        marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: 'Tespit Konumu'
+        });
+    }
+
+    const table = document.querySelector('.datatables-review');
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+
+    table.addEventListener('click', function(e) {
+        const row = e.target.closest('tr');
+        if (!row) return;
+
+        const data = {
+            id: row.cells[0].textContent,
+            image: row.cells[1].querySelector('img').src,
+            timestamp: row.cells[2].textContent,
+            processed: row.cells[3].textContent,
+            latitude: row.cells[4].textContent,
+            longitude: row.cells[5].textContent,
+            address: row.cells[6].textContent,
+            deviceUuid: row.cells[7].textContent,
+            className: row.cells[8].textContent,
+            coordinates: `X: ${row.cells[9].textContent}, Y: ${row.cells[10].textContent}`,
+            confidence: row.cells[11].textContent
+        };
+
+        // Populate modal
+        document.getElementById('modalImage').src = data.image;
+        document.getElementById('modalId').textContent = data.id;
+        document.getElementById('modalTimestamp').textContent = data.timestamp;
+        document.getElementById('modalProcessed').textContent = data.processed;
+        document.getElementById('modalLocation').textContent = `${data.latitude}, ${data.longitude}`;
+        document.getElementById('modalAddress').textContent = data.address;
+        document.getElementById('modalDeviceUuid').textContent = data.deviceUuid;
+        document.getElementById('modalClass').textContent = data.className;
+        document.getElementById('modalCoordinates').textContent = data.coordinates;
+        document.getElementById('modalConfidence').textContent = data.confidence;
+
+        // Initialize map with coordinates
+        initMap(data.latitude, data.longitude);
+
+        modal.show();
+    });
+
+    // Handle modal hidden event to cleanup map
+    document.getElementById('detailModal').addEventListener('hidden.bs.modal', function () {
+        if (marker) {
+            marker.setMap(null);
+        }
+    });
+
+    document.getElementById('sendToDepartment').addEventListener('click', function() {
+        // TODO: Implement department send functionality
+        alert('Departmana gönderme işlemi yapılacak');
+    });
+});
+</script>
 {% endblock page_js %}
 
 
@@ -130,7 +211,6 @@
           <th>Longitude</th>
           <th>Address</th>
           <th>Device UUID</th>
-          <!-- Detection Fields -->
           <th>Detection Class</th>
           <th>X Coordinate</th>
           <th>Y Coordinate</th>
@@ -160,6 +240,62 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tespit Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <img id="modalImage" src="" class="img-fluid mb-3" alt="Detection Image">
+            <div id="map" style="height: 300px; width: 100%;"></div>
+          </div>
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4">ID:</dt>
+              <dd class="col-sm-8" id="modalId"></dd>
+
+              <dt class="col-sm-4">Tarih:</dt>
+              <dd class="col-sm-8" id="modalTimestamp"></dd>
+
+              <dt class="col-sm-4">İşlendi:</dt>
+              <dd class="col-sm-8" id="modalProcessed"></dd>
+
+              <dt class="col-sm-4">Konum:</dt>
+              <dd class="col-sm-8" id="modalLocation"></dd>
+
+              <dt class="col-sm-4">Adres:</dt>
+              <dd class="col-sm-8" id="modalAddress"></dd>
+
+              <dt class="col-sm-4">Cihaz UUID:</dt>
+              <dd class="col-sm-8" id="modalDeviceUuid"></dd>
+
+              <dt class="col-sm-4">Tespit Sınıfı:</dt>
+              <dd class="col-sm-8" id="modalClass"></dd>
+
+              <dt class="col-sm-4">Koordinatlar:</dt>
+              <dd class="col-sm-8" id="modalCoordinates"></dd>
+
+              <dt class="col-sm-4">Güven Oranı:</dt>
+              <dd class="col-sm-8" id="modalConfidence"></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        <button type="button" class="btn btn-primary" id="sendToDepartment">Departmana Gönder</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
