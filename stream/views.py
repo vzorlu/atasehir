@@ -26,6 +26,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
         try:
             # Validate and save StreamImage
+            print("request.data", request.data)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             stream_image = serializer.save()
