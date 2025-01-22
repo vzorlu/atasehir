@@ -9,6 +9,11 @@ urlpatterns = [
         name="detaylar",
     ),
     path(
+        "harita-raporlari",
+        login_required(CouncilView.as_view(template_name="harita-raporlari.html")),
+        name="harita-raporlari",
+    ),
+    path(
         "mahalleler",
         login_required(CouncilView.as_view(template_name="mahalleler.html")),
         name="mahalleler",

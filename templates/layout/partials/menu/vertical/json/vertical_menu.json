@@ -13,6 +13,12 @@
       "icon": "menu-icon tf-icons ti ti-video"
     },
     {
+      "url": "harita-raporlari",
+      "name": "Harita Raporları",
+      "slug": "harita-raporlari",
+      "icon": "menu-icon tf-icons ti ti-report"
+    },
+    {
       "url": "detaylar",
       "name": "Raporlar",
       "slug": "detaylar",

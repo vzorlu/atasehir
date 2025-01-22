@@ -206,20 +206,19 @@ document.addEventListener('DOMContentLoaded', function() {
     <table class="datatables-review table border-top">
       <thead>
         <tr>
-          <!-- StreamImage Fields -->
           <th>ID</th>
-          <th>Image</th>
-          <th>Timestamp</th>
-          <th>Processed</th>
-          <th>Latitude</th>
-          <th>Longitude</th>
-          <th>Address</th>
-          <th>Device UUID</th>
-          <th>Detection Class</th>
-          <th>X Coordinate</th>
-          <th>Y Coordinate</th>
-          <th>Confidence</th>
-          <th>Detection Time</th>
+          <th>Görüntü</th>
+          <th>Tarih</th>
+          <th>İşlendi</th>
+          <th class="d-none">Enlem</th>
+          <th class="d-none">Boylam</th>
+          <th>Adres</th>
+          <th>Cihaz UUID</th>
+          <th>Tespit Sınıfı</th>
+          <th class="d-none">X Koordinatı</th>
+          <th class="d-none">Y Koordinatı</th>
+          <th>Güven Oranı</th>
+          <th>Tespit Zamanı</th>
         </tr>
       </thead>
       <tbody>
@@ -228,15 +227,15 @@ document.addEventListener('DOMContentLoaded', function() {
           <tr>
             <td>{{ image.id }}</td>
             <td><img src="{{ image.image.url }}" width="50" height="50"></td>
-            <td>{{ image.timestamp|date:"Y-m-d H:i:s" }}</td>
-            <td>{{ image.processed|yesno:"Yes,No" }}</td>
-            <td>{{ image.lang }}</td>
-            <td>{{ image.long }}</td>
+            <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
+            <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
+            <td class="d-none">{{ image.lang }}</td>
+            <td class="d-none">{{ image.long }}</td>
             <td>{{ image.fulladdress }}</td>
             <td>{{ image.deviceuuid }}</td>
             <td>{{ detection.class_name }}</td>
-            <td>{{ detection.x_coord }}</td>
-            <td>{{ detection.y_coord }}</td>
+            <td class="d-none">{{ detection.x_coord }}</td>
+            <td class="d-none">{{ detection.y_coord }}</td>
             <td>{{ detection.confidence }}</td>
             <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
           </tr>
@@ -251,53 +250,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tespit Detayları</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bx bx-detail me-2"></i>Tespit Detayları</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <div class="row">
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <!-- Sol Kolon - Görüntü ve Harita -->
           <div class="col-md-6">
-            <img id="modalImage" src="" class="img-fluid mb-3" alt="Detection Image">
-            <div id="map" style="height: 300px; width: 100%;"></div>
+            <div class="card mb-4">
+              <div class="card-body p-0">
+                <img id="modalImage" src="" class="img-fluid w-100" alt="Tespit Görüntüsü">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body p-0">
+                <div id="map" style="height: 300px; width: 100%; border-radius: 0.5rem;"></div>
+              </div>
+            </div>
           </div>
+
+          <!-- Sağ Kolon - Detaylar -->
           <div class="col-md-6">
-            <dl class="row">
-              <dt class="col-sm-4">ID:</dt>
-              <dd class="col-sm-8" id="modalId"></dd>
+            <div class="card">
+              <div class="card-body">
+                <h6 class="mb-4 text-primary">Tespit Bilgileri</h6>
+                <dl class="row mb-0">
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-hash me-2"></i>ID:</dt>
+                  <dd class="col-sm-8" id="modalId"></dd>
 
-              <dt class="col-sm-4">Tarih:</dt>
-              <dd class="col-sm-8" id="modalTimestamp"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-calendar me-2"></i>Tarih:</dt>
+                  <dd class="col-sm-8" id="modalTimestamp"></dd>
 
-              <dt class="col-sm-4">İşlendi:</dt>
-              <dd class="col-sm-8" id="modalProcessed"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-check-circle me-2"></i>İşlendi:</dt>
+                  <dd class="col-sm-8" id="modalProcessed"></dd>
 
-              <dt class="col-sm-4">Konum:</dt>
-              <dd class="col-sm-8" id="modalLocation"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-map-pin me-2"></i>Konum:</dt>
+                  <dd class="col-sm-8" id="modalLocation"></dd>
 
-              <dt class="col-sm-4">Adres:</dt>
-              <dd class="col-sm-8" id="modalAddress"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-map me-2"></i>Adres:</dt>
+                  <dd class="col-sm-8" id="modalAddress"></dd>
 
-              <dt class="col-sm-4">Cihaz UUID:</dt>
-              <dd class="col-sm-8" id="modalDeviceUuid"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-mobile me-2"></i>Cihaz UUID:</dt>
+                  <dd class="col-sm-8" id="modalDeviceUuid"></dd>
 
-              <dt class="col-sm-4">Tespit Sınıfı:</dt>
-              <dd class="col-sm-8" id="modalClass"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-category me-2"></i>Tespit Sınıfı:</dt>
+                  <dd class="col-sm-8" id="modalClass"></dd>
 
-              <dt class="col-sm-4">Koordinatlar:</dt>
-              <dd class="col-sm-8" id="modalCoordinates"></dd>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-target-lock me-2"></i>Koordinatlar:</dt>
+                  <dd class="col-sm-8" id="modalCoordinates"></dd>
 
-              <dt class="col-sm-4">Güven Oranı:</dt>
-              <dd class="col-sm-8" id="modalConfidence"></dd>
-            </dl>
+                  <dt class="col-sm-4 text-muted"><i class="bx bx-badge-check me-2"></i>Güven Oranı:</dt>
+                  <dd class="col-sm-8" id="modalConfidence"></dd>
+                </dl>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-        <button type="button" class="btn btn-primary" id="sendToDepartment">Departmana Gönder</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bx bx-x me-1"></i>Kapat
+        </button>
+        <button type="button" class="btn btn-primary" id="sendToDepartment">
+          <i class="bx bx-send me-1"></i>Departmana Gönder
+        </button>
       </div>
     </div>
   </div>
