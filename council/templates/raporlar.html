@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load i18n %}
+{% load stream_filters %}
 
 {% block title %}Detaylı Rapor{% endblock %}
 
@@ -209,7 +210,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <td>{{ detection.class_name }}</td>
             <td class="d-none">{{ detection.x_coord }}</td>
             <td class="d-none">{{ detection.y_coord }}</td>
-            <td>{{ detection.confidence }}</td>
+            <td>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
+                </div>
+                {{ detection.confidence|floatformat:2 }}
+            </td>
             <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
           </tr>
           {% endfor %}
@@ -223,70 +229,159 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
-            <button class="btn btn-link p-0 me-3" type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapse{{ image.id }}"
-                    aria-expanded="false">
-                <i class="bx bx-chevron-down customicon"></i>
+            <button class="btn btn-link p-0 me-3" data-bs-toggle="collapse" data-bs-target="#collapse{{ image.id }}">
+                <i class="bx bx-chevron-down"></i>
             </button>
-            <h5 class="mb-0">ID: {{ image.id }} - {{ image.timestamp }}</h5>
+            <div>
+                <h5 class="mb-0">Image #{{ image.id }}</h5>
+                <small class="text-muted">{{ image.timestamp|date:"d M Y H:i" }}</small>
+            </div>
+        </div>
+        <div class="detection-summary">
+            <span class="badge bg-primary">{{ image.detections.count }} Detections</span>
         </div>
     </div>
 
     <div class="card-body">
         <div class="row">
+            <!-- Image Preview -->
             <div class="col-md-4">
-                <div class="position-relative">
-                    <img src="https://atasehir.algi.ai/{{ image.image.url }}" class="img-fluid mb-3" style="max-width: 300px;" id="img-{{ image.id }}">
-                    <canvas id="canvas-{{ image.id }}" style="position: absolute; top: 0; left: 0;"></canvas>
+                <div class="position-relative image-container">
+                    <img src="{{ image.image.url }}"
+                         class="img-fluid rounded cursor-pointer"
+                         onclick="openImageModal('{{ image.id }}', '{{ image.image.url }}')"
+                         alt="Detection Image">
+                    <div class="image-overlay">
+                        <i class="bx bx-search-alt"></i> Click to view details
+                    </div>
                 </div>
             </div>
-            <div class="col-md-8">
-                <p><strong>Location:</strong> {{ image.fulladdress }}</p>
-                <p><strong>Area:</strong> {{ image.area }}</p>
 
-                {% if image.lang and image.long %}
-                <div class="map-container mb-3">
-                    <div id="map-{{ image.id }}" style="height: 200px;" class="rounded"></div>
+            <!-- Image Info -->
+            <div class="col-md-8">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Location</h6>
+                        <p>{{ image.fulladdress }}</p>
+                        <p><strong>Area:</strong> {{ image.area }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="map-{{ image.id }}" style="height: 200px;" class="rounded"></div>
+                    </div>
                 </div>
-                {% endif %}
+
+                <!-- Collapsible Detections -->
+                <div class="collapse" id="collapse{{ image.id }}">
+                    <h6>Detection Details</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Confidence</th>
+                                    <th>Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detection in image.detections.all %}
+                                <tr>
+                                    <td>{{ detection.class_name }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
+                                        </div>
+                                        {{ detection.confidence|floatformat:2 }}
+                                    </td>
+                                    <td>x: {{ detection.x_coord|floatformat:0 }}, y: {{ detection.y_coord|floatformat:0 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="collapse" id="collapse{{ image.id }}">
-            {% if image.detections.all %}
-            <hr>
-            <h6>Detections:</h6>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Class</th>
-                        <th>Confidence</th>
-                        <th>X Coord</th>
-                        <th>Y Coord</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody>
+<!-- Modal -->
+<div class="modal fade" id="modal-{{ image.id }}">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Detection Analysis - Image #{{ image.id }}
+                    <small class="text-muted">{{ image.timestamp|date:"d M Y H:i" }}</small>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="detection-viewer">
+                    <div id="loading-{{ image.id }}" class="loading-overlay">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="modalCanvas-{{ image.id }}"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="detection-legend">
                     {% for detection in image.detections.all %}
-                    <tr>
-                        <td>{{ detection.id }}</td>
-                        <td>{{ detection.class_name }}</td>
-                        <td>{{ detection.confidence|floatformat:2 }}</td>
-                        <td>{{ detection.x_coord|floatformat:2 }}</td>
-                        <td>{{ detection.y_coord|floatformat:2 }}</td>
-                        <td>{{ detection.timestamp }}</td>
-                    </tr>
+                    <span class="badge bg-primary me-2">
+                        {{ detection.class_name }} ({{ detection.confidence|floatformat:2 }})
+                    </span>
                     {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>No detections found</p>
-            {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 {% endfor %}
 
+<style>
+.image-container {
+    overflow: hidden;
+    border-radius: 0.375rem;
+}
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.image-container:hover .image-overlay {
+    opacity: 1;
+}
+.detection-viewer {
+    position: relative;
+    height: calc(100vh - 250px);
+    background: #f8f9fa;
+}
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+.canvas-container {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+</style>
 {% endblock %}
