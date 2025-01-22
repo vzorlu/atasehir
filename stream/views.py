@@ -21,7 +21,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         logger.info("Step 1: Incoming data: %s", request.data)
         try:
-            # Step 2: Validate and save
+            # Step 2: Validate and save StreamImage
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             stream_image = serializer.save()
@@ -38,16 +38,17 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
             # Process YOLO detections
             logger.info("Step 4: YOLO detection started")
-            results = yolo_model(image_file, size=640)
+            results = yolo_model.predict(source=image_file, imgsz=640)
 
             # Create Detection objects
-            for det in results.xyxy[0]:  # Processing first image only
+            for r in results[0].boxes.data:
+                x1, y1, x2, y2, conf, cls = r.tolist()
                 Detection.objects.create(
                     image=stream_image,
-                    class_name=results.names[int(det[5].item())],
-                    x_coord=float(det[0].item()),
-                    y_coord=float(det[1].item()),
-                    confidence=float(det[4].item()),
+                    class_name=results[0].names[int(cls)],
+                    x_coord=float(x1),
+                    y_coord=float(y1),
+                    confidence=float(conf),
                 )
 
             logger.info("Step 5: YOLO detection completed")
