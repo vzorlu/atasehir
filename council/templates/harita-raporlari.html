@@ -7,50 +7,103 @@
 
 {% block vendor_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'vendor/libs/leaflet/leaflet.css' %}" />
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+<style>
+.mapboxgl-popup {
+  max-width: 300px;
+}
+.mapboxgl-popup-content {
+  padding: 15px;
+}
+</style>
 {% endblock vendor_css %}
 
 {% block vendor_js %}
 {{ block.super }}
-<script src="{% static 'vendor/libs/leaflet/leaflet.js' %}"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
 <script>
-  $(document).ready(function () {
-    // Harita Oluşturma
-    var map = L.map('layerControl').setView([39.9334, 32.8597], 6);  // Başlangıç noktası Türkiye
+mapboxgl.accessToken = 'pk.eyJ1Ijoidm9sa2Fuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
 
-    // CartoDB Dark Matter haritası ekleme (dark mod)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">CartoDB</a> contributors',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+document.addEventListener('DOMContentLoaded', function () {
+    const map = new mapboxgl.Map({
+        container: 'layerControl',
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [29.1384, 40.9909], // İstanbul merkezi
+        zoom: 11
+    });
 
-    // Haritaya işaret ekleme örneği
-    L.marker([39.9334, 32.8597]).addTo(map)
-      .bindPopup('Bir cihaz burada bulunuyor')
-      .openPopup();
-  });
+    const bounds = new mapboxgl.LngLatBounds();
+
+    {% for image in stream_images %}
+    {% if image.lang and image.long %}
+        // Create popup content
+        const popup = new mapboxgl.Popup({offset: 25})
+            .setHTML(`
+                <div class="p-2">
+                    <img src="{{ image.image.url }}" width="150" class="mb-2">
+                    <p class="mb-1"><strong>ID:</strong> {{ image.id }}</p>
+                    <p class="mb-1"><strong>Tarih:</strong> {{ image.timestamp|date:"d.m.Y H:i:s" }}</p>
+                    <p class="mb-1"><strong>Adres:</strong> {{ image.fulladdress }}</p>
+                    <button class="btn btn-primary btn-sm" onclick="showDetails('{{ image.id }}')">
+                        Detaylar
+                    </button>
+                </div>
+            `);
+
+        // Create marker element
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.style.backgroundImage = `url({% static 'img/marker.png' %})`;
+        el.style.width = '32px';
+        el.style.height = '32px';
+        el.style.backgroundSize = '100%';
+
+        // Add marker to map
+        new mapboxgl.Marker(el)
+            .setLngLat([{{ image.long }}, {{ image.lang }}])
+            .setPopup(popup)
+            .addTo(map);
+
+        bounds.extend([{{ image.long }}, {{ image.lang }}]);
+    {% endif %}
+    {% endfor %}
+
+    // Fit map to markers
+    if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, {
+            padding: 50
+        });
+    }
+});
+
+function showDetails(imageId) {
+    fetch(`/api/stream-images/${imageId}/`)
+        .then(response => response.json())
+        .then(data => {
+            $('#detailModal').modal('show');
+            $('#modalImage').attr('src', data.image);
+            $('#modalId').text(data.id);
+            $('#modalTimestamp').text(data.timestamp);
+            $('#modalAddress').text(data.fulladdress);
+        });
+}
 </script>
 {% endblock vendor_js %}
 
 {% block page_js %}
 {{ block.super }}
-<script src="{% static 'js/maps-leaflet.js' %}"></script>
 {% endblock page_js %}
 
 {% block content %}
 <div class="row">
-
-
-  <!-- Layer Control -->
-  <div class="col-12">
-    <div class="card">
-      <h5 class="card-header">AI Cihaz Konumları</h5>
-      <div class="card-body">
-        <div class="leaflet-map" id="layerControl"></div>
-      </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body p-0">
+                <div id="layerControl" style="width: 100%; height: 75vh;"></div>
+            </div>
+        </div>
     </div>
-  </div>
-  <!-- /Layer Control -->
 </div>
+
+<!-- Modal from raporlar.html -->
 {% endblock %}
