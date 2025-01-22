@@ -5,8 +5,12 @@ from rest_framework.decorators import api_view
 import logging
 from .models import StreamImage, Detection
 from .serializers import StreamImageSerializer, StreamDetectionSerializer
+from ultralytics import YOLO
 
 logger = logging.getLogger(__name__)
+
+# Initialize YOLO model at module level
+yolo_model = YOLO("yolov8n.pt")
 
 
 class StreamImageViewSet(viewsets.ModelViewSet):
@@ -34,7 +38,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
             # Process YOLO detections
             logger.info("Step 4: YOLO detection started")
-            results = model(image_file, size=640)
+            results = yolo_model(image_file, size=640)
 
             # Create Detection objects
             for det in results.xyxy[0]:  # Processing first image only
