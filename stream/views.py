@@ -5,11 +5,6 @@ from rest_framework.decorators import api_view
 import logging
 from .models import StreamImage, Detection
 from .serializers import StreamImageSerializer, StreamDetectionSerializer
-from ultralytics import YOLO
-import cv2
-import numpy as np
-import os
-import torch
 
 logger = logging.getLogger(__name__)
 
@@ -34,93 +29,28 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                 return Response({"error": "No image provided"}, status=400)
 
             # Log image info
-            logger.info("Incoming image filename: %s", image_file.name)
-            logger.info("Incoming image size: %s bytes", image_file.size)
+            logger.info(f"Incoming image filename: {image_file.name}")
+            logger.info(f"Incoming image size: {image_file.size} bytes")
 
-            # For safety, log only a small snippet of bytes
-            image_bytes = image_file.read()
-            first_64 = image_bytes[:64].hex()
-            logger.info("Image content (first 64 bytes in hex): %s", first_64)
-
-            # Reset pointer and continue with YOLO
-            image_file.seek(0)
-
+            # Process YOLO detections
             logger.info("Step 4: YOLO detection started")
-            # Save image first
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            stream_image = serializer.save()
+            results = model(image_file, size=640)
 
-            # Process with YOLO
-            model = YOLO("yolov8n.pt")
-            model.to("cuda")  # Move model to GPU
-            # Reset file pointer and read image
-            image_file.seek(0)
-            image_bytes = image_file.read()
-
-            # Convert to numpy array
-            nparr = np.frombuffer(image_bytes, np.uint8)
-            img_array = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-            if img_array is None:
-                raise ValueError("Failed to decode image")
-
-            # Run detection with confidence threshold
-            results = model(img_array, conf=0.5)[0]
-
-            # Draw bounding boxes if detections are found
-            if len(results.boxes) > 0:
-                for box in results.boxes:
-                    x1, y1, x2, y2 = map(int, box.xyxy)
-                    cv2.rectangle(img_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(
-                        img_array, f"{box.conf:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2
-                    )
-
-                # Save the image with detections
-                original_path = stream_image.image.path
-                directory, filename = os.path.split(original_path)
-                name, ext = os.path.splitext(filename)
-                output_path = os.path.join(directory, f"{name}_det{ext}")
-                cv2.imwrite(output_path, img_array)
-
-            # Save detections
-            for result in results.boxes.data:
+            # Create Detection objects
+            for det in results.xyxy[0]:  # Processing first image only
                 Detection.objects.create(
                     image=stream_image,
-                    class_name=model.names[int(result[5])],
-                    x_coord=float(result[0]),
-                    y_coord=float(result[1]),
-                    confidence=float(result[4]),
+                    class_name=results.names[int(det[5].item())],
+                    x_coord=float(det[0].item()),
+                    y_coord=float(det[1].item()),
+                    confidence=float(det[4].item()),
                 )
 
-            stream_image.processed = True
-            stream_image.save()
             logger.info("Step 5: YOLO detection completed")
-
-            # Final step: Return response
-            logger.info("Step 6: Returning response")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            # Handle YOLO detections
-            if "detections" in request.data:
-                detections = request.data["detections"]
-                for det in detections:
-                    # Convert tensor values to Python scalars
-                    Detection.objects.create(
-                        image=stream_image,
-                        class_name=det["class_name"],
-                        x_coord=float(det["x_coord"].item() if torch.is_tensor(det["x_coord"]) else det["x_coord"]),
-                        y_coord=float(det["y_coord"].item() if torch.is_tensor(det["y_coord"]) else det["y_coord"]),
-                        confidence=float(
-                            det["confidence"].item() if torch.is_tensor(det["confidence"]) else det["confidence"]
-                        ),
-                    )
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            logger.error(f"Error in StreamImageViewSet.create: {e}")
+            logger.error(f"Error in StreamImageViewSet.create: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request, *args, **kwargs):
