@@ -1,3 +1,7 @@
+import os
+import tempfile
+from PIL import Image
+import io
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -32,24 +36,32 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                 logger.error("No image provided")
                 return Response({"error": "No image provided"}, status=400)
 
-            # Log image info
-            logger.info(f"Incoming image filename: {image_file.name}")
-            logger.info(f"Incoming image size: {image_file.size} bytes")
+            # Convert image to PIL Image
+            image = Image.open(io.BytesIO(image_file.read()))
 
-            # Process YOLO detections
-            logger.info("Step 4: YOLO detection started")
-            results = yolo_model.predict(source=image_file, imgsz=640)
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                # Save as JPEG
+                image.save(tmp_file, format="JPEG")
+                tmp_file_path = tmp_file.name
 
-            # Create Detection objects
-            for r in results[0].boxes.data:
-                x1, y1, x2, y2, conf, cls = r.tolist()
-                Detection.objects.create(
-                    image=stream_image,
-                    class_name=results[0].names[int(cls)],
-                    x_coord=float(x1),
-                    y_coord=float(y1),
-                    confidence=float(conf),
-                )
+                # Process YOLO detections
+                logger.info("Step 4: YOLO detection started")
+                results = yolo_model.predict(source=tmp_file_path)
+
+                # Create Detection objects
+                for r in results[0].boxes.data:
+                    x1, y1, x2, y2, conf, cls = r.tolist()
+                    Detection.objects.create(
+                        image=stream_image,
+                        class_name=results[0].names[int(cls)],
+                        x_coord=float(x1),
+                        y_coord=float(y1),
+                        confidence=float(conf),
+                    )
+
+            # Clean up temporary file
+            os.unlink(tmp_file_path)
 
             logger.info("Step 5: YOLO detection completed")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
