@@ -1,12 +1,16 @@
 from rest_framework import serializers
 from .models import StreamImage, Detection
 
-class StreamImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StreamImage
-        fields = '__all__'
 
-class DetectionSerializer(serializers.ModelSerializer):
+class StreamDetectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detection
-        fields = '__all__'
+        fields = ["id", "class_name", "x_coord", "y_coord", "confidence", "timestamp"]
+
+
+class StreamImageSerializer(serializers.ModelSerializer):
+    detections = StreamDetectionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StreamImage
+        fields = ["id", "image", "timestamp", "processed", "lang", "long", "fulladdress", "deviceuuid", "detections"]

@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 import logging
 from .models import StreamImage, Detection
-from .serializers import StreamImageSerializer, DetectionSerializer
+from .serializers import StreamImageSerializer, StreamDetectionSerializer
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -12,8 +12,9 @@ import os
 
 logger = logging.getLogger(__name__)
 
+
 class StreamImageViewSet(viewsets.ModelViewSet):
-    queryset = StreamImage.objects.all()
+    queryset = StreamImage.objects.prefetch_related("detections").all()
     serializer_class = StreamImageSerializer
     parser_classes = (MultiPartParser, FormParser)
 
@@ -26,7 +27,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             stream_image = serializer.save()
             logger.info("Step 2: Validated data, saved StreamImage")
 
-            image_file = request.FILES.get('image')
+            image_file = request.FILES.get("image")
             if not image_file:
                 logger.error("No image provided")
                 return Response({"error": "No image provided"}, status=400)
@@ -50,8 +51,8 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             stream_image = serializer.save()
 
             # Process with YOLO
-            model = YOLO('yolov8n.pt')
-            model.to('cuda')  # Move model to GPU
+            model = YOLO("yolov8n.pt")
+            model.to("cuda")  # Move model to GPU
             # Reset file pointer and read image
             image_file.seek(0)
             image_bytes = image_file.read()
@@ -71,7 +72,9 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                 for box in results.boxes:
                     x1, y1, x2, y2 = map(int, box.xyxy)
                     cv2.rectangle(img_array, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(img_array, f'{box.conf:.2f}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    cv2.putText(
+                        img_array, f"{box.conf:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2
+                    )
 
                 # Save the image with detections
                 original_path = stream_image.image.path
@@ -87,7 +90,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                     class_name=model.names[int(result[5])],
                     x_coord=float(result[0]),
                     y_coord=float(result[1]),
-                    confidence=float(result[4])
+                    confidence=float(result[4]),
                 )
 
             stream_image.processed = True
@@ -100,19 +103,18 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             logger.error(f"Error in StreamImageViewSet.create: {e}")
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+
 class DetectionViewSet(viewsets.ModelViewSet):
     queryset = Detection.objects.all()
-    serializer_class = DetectionSerializer
+    serializer_class = StreamDetectionSerializer
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 def debug_view(request):
     logger.info(f"Headers: {request.headers}")
     logger.info(f"Method: {request.method}")
