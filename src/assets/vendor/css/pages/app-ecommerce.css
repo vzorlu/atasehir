@@ -15,3 +15,11 @@
     border-left: none !important;
   }
 }
+
+i.bx.bx-chevron-down.customicon {
+  font-size: 22px;
+  color: #ffffff !important;
+  border: 1px solid #fff;
+  width: 20px;
+  height: 20px;
+}
