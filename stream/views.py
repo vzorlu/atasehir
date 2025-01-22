@@ -45,7 +45,7 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
         try:
             # Extract area from fulladdress
-            fulladdress = request.data.get("fulladdress", [""])[0]
+            fulladdress = request.data.get("fulladdress", [""])
             print("--fa", fulladdress)
             area = extract_area(fulladdress)
 
