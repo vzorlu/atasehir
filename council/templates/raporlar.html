@@ -3,7 +3,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}eCommerce Manage reviews - App{% endblock %}
+{% block title %}Detaylı Rapor{% endblock %}
 
 {% block vendor_css %}
 {{ block.super }}
@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="{% static 'vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
 {% endblock vendor_css %}
 
 {% block vendor_js %}
@@ -20,7 +21,8 @@
 <script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
-<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&v=beta"></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -28,95 +30,83 @@
 <link rel="stylesheet" href="{% static 'vendor/css/pages/app-ecommerce.css' %}" />
 {% endblock page_css %}
 
+{% block head %}
+{{ block.super }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+{% endblock %}
+
 {% block page_js %}
 {{ block.super }}
-<script src="{% static 'js/extended-ui-star-ratings.js' %}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let map;
-    let marker;
+window.addEventListener('load', function() {
+  mapboxgl.accessToken = 'pk.eyJ1Ijoidm9sa2Fuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
 
-    async function initMap(lat, lng) {
-        const { Map } = await google.maps.importLibrary("maps");
-        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-
-        const location = { lat: parseFloat(lat), lng: parseFloat(lng) };
-
-        if (!map) {
-            map = new Map(document.getElementById('map'), {
-                zoom: 15,
-                center: location,
-                mapId: 'DEMO_MAP_ID'
-            });
-        } else {
-            map.setCenter(location);
-        }
-
-        if (marker) {
-            marker.map = null;
-        }
-
-        marker = new AdvancedMarkerElement({
-            map: map,
-            position: location,
-            title: 'Tespit Konumu'
+    {% for image in stream_images %}
+    {% if image.lang and image.long %}
+    try {
+        const map = new mapboxgl.Map({
+            container: 'map-{{ image.id }}',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [{{ image.long }}, {{ image.lang }}],
+            zoom: 14
         });
+
+        new mapboxgl.Marker()
+            .setLngLat([{{ image.long }}, {{ image.lang }}])
+            .setPopup(new mapboxgl.Popup().setHTML(`
+                <h6>Location Details</h6>
+                <p>{{ image.fulladdress }}</p>
+                <p>Area: {{ image.area }}</p>
+            `))
+            .addTo(map);
+    } catch (e) {
+        console.error('Map initialization error for image {{ image.id }}:', e);
     }
+    {% endif %}
+    {% endfor %}
+});
 
-    const table = document.querySelector('.datatables-review');
-    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+document.addEventListener('DOMContentLoaded', function() {
+    {% for image in stream_images %}
+    (function() {
+        const img = document.getElementById('img-{{ image.id }}');
 
-    table.addEventListener('click', function(e) {
-        const row = e.target.closest('tr');
-        if (!row) return;
+        img.onload = function() {
+            const canvas = new fabric.Canvas('canvas-{{ image.id }}', {
+                width: img.width,
+                height: img.height
+            });
 
-        const data = {
-            id: row.cells[0].textContent,
-            image: row.cells[1].querySelector('img').src,
-            timestamp: row.cells[2].textContent,
-            processed: row.cells[3].textContent,
-            latitude: row.cells[4].textContent,
-            longitude: row.cells[5].textContent,
-            address: row.cells[6].textContent,
-            deviceUuid: row.cells[7].textContent,
-            className: row.cells[8].textContent,
-            coordinates: `X: ${row.cells[9].textContent}, Y: ${row.cells[10].textContent}`,
-            confidence: row.cells[11].textContent
+            {% for detection in image.detections.all %}
+            (function() {
+                const circle_{{ detection.id }} = new fabric.Circle({
+                    left: {{ detection.x_coord }},
+                    top: {{ detection.y_coord }},
+                    radius: 5,
+                    fill: 'red',
+                    selectable: false
+                });
+
+                const text_{{ detection.id }} = new fabric.Text('{{ detection.class_name }}', {
+                    left: {{ detection.x_coord }} + 10,
+                    top: {{ detection.y_coord }} - 10,
+                    fontSize: 14,
+                    fill: 'red',
+                    selectable: false
+                });
+
+                canvas.add(circle_{{ detection.id }});
+                canvas.add(text_{{ detection.id }});
+            })();
+            {% endfor %}
+
+            canvas.renderAll();
         };
-
-        // Populate modal
-        document.getElementById('modalImage').src = data.image;
-        document.getElementById('modalId').textContent = data.id;
-        document.getElementById('modalTimestamp').textContent = data.timestamp;
-        document.getElementById('modalProcessed').textContent = data.processed;
-        document.getElementById('modalLocation').textContent = `${data.latitude}, ${data.longitude}`;
-        document.getElementById('modalAddress').textContent = data.address;
-        document.getElementById('modalDeviceUuid').textContent = data.deviceUuid;
-        document.getElementById('modalClass').textContent = data.className;
-        document.getElementById('modalCoordinates').textContent = data.coordinates;
-        document.getElementById('modalConfidence').textContent = data.confidence;
-
-        // Initialize map with coordinates
-        initMap(data.latitude, data.longitude);
-
-        modal.show();
-    });
-
-    // Handle modal hidden event to cleanup map
-    document.getElementById('detailModal').addEventListener('hidden.bs.modal', function () {
-        if (marker) {
-            marker.setMap(null);
-        }
-    });
-
-    document.getElementById('sendToDepartment').addEventListener('click', function() {
-        // TODO: Implement department send functionality
-        alert('Departmana gönderme işlemi yapılacak');
-    });
+    })();
+    {% endfor %}
 });
 </script>
 {% endblock page_js %}
-
 
 {% block content %}
 <div class="row mb-6 g-6">
@@ -204,29 +194,12 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="card">
   <div class="card-datatable table-responsive">
     <table class="datatables-review table border-top">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Görüntü</th>
-          <th>Tarih</th>
-          <th>İşlendi</th>
-          <th class="d-none">Enlem</th>
-          <th class="d-none">Boylam</th>
-          <th>Adres</th>
-          <th>Cihaz UUID</th>
-          <th>Tespit Sınıfı</th>
-          <th class="d-none">X Koordinatı</th>
-          <th class="d-none">Y Koordinatı</th>
-          <th>Güven Oranı</th>
-          <th>Tespit Zamanı</th>
-        </tr>
-      </thead>
       <tbody>
         {% for image in stream_images %}
           {% for detection in image.detection_set.all %}
           <tr>
             <td>{{ image.id }}</td>
-            <td><img src="{{ image.image.url }}" width="50" height="50"></td>
+            <td><img src="https://atasehir.algi.ai/{{ image.image.url }}" width="50" height="50"></td>
             <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
             <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
             <td class="d-none">{{ image.lang }}</td>
@@ -263,11 +236,20 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="card-body">
         <div class="row">
             <div class="col-md-4">
-                <img src="{{ image.image.url }}" class="img-fluid mb-3" style="max-width: 300px;">
+                <div class="position-relative">
+                    <img src="https://atasehir.algi.ai/{{ image.image.url }}" class="img-fluid mb-3" style="max-width: 300px;" id="img-{{ image.id }}">
+                    <canvas id="canvas-{{ image.id }}" style="position: absolute; top: 0; left: 0;"></canvas>
+                </div>
             </div>
             <div class="col-md-8">
                 <p><strong>Location:</strong> {{ image.fulladdress }}</p>
                 <p><strong>Area:</strong> {{ image.area }}</p>
+
+                {% if image.lang and image.long %}
+                <div class="map-container mb-3">
+                    <div id="map-{{ image.id }}" style="height: 200px;" class="rounded"></div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -307,78 +289,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 {% endfor %}
 
-
-<!-- Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="bx bx-detail me-2"></i>Tespit Detayları</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="row g-4">
-          <!-- Sol Kolon - Görüntü ve Harita -->
-          <div class="col-md-6">
-            <div class="card mb-4">
-              <div class="card-body p-0">
-                <img id="modalImage" src="" class="img-fluid w-100" alt="Tespit Görüntüsü">
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-body p-0">
-                <div id="map" style="height: 300px; width: 100%; border-radius: 0.5rem;"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sağ Kolon - Detaylar -->
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-body">
-                <h6 class="mb-4 text-primary">Tespit Bilgileri</h6>
-                <dl class="row mb-0">
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-hash me-2"></i>ID:</dt>
-                  <dd class="col-sm-8" id="modalId"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-calendar me-2"></i>Tarih:</dt>
-                  <dd class="col-sm-8" id="modalTimestamp"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-check-circle me-2"></i>İşlendi:</dt>
-                  <dd class="col-sm-8" id="modalProcessed"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-map-pin me-2"></i>Konum:</dt>
-                  <dd class="col-sm-8" id="modalLocation"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-map me-2"></i>Adres:</dt>
-                  <dd class="col-sm-8" id="modalAddress"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-mobile me-2"></i>Cihaz UUID:</dt>
-                  <dd class="col-sm-8" id="modalDeviceUuid"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-category me-2"></i>Tespit Sınıfı:</dt>
-                  <dd class="col-sm-8" id="modalClass"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-target-lock me-2"></i>Koordinatlar:</dt>
-                  <dd class="col-sm-8" id="modalCoordinates"></dd>
-
-                  <dt class="col-sm-4 text-muted"><i class="bx bx-badge-check me-2"></i>Güven Oranı:</dt>
-                  <dd class="col-sm-8" id="modalConfidence"></dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bx bx-x me-1"></i>Kapat
-        </button>
-        <button type="button" class="btn btn-primary" id="sendToDepartment">
-          <i class="bx bx-send me-1"></i>Departmana Gönder
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %}

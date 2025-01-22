@@ -18,8 +18,7 @@
   // Mapbox Access Token
 
   //!YOUR_MAPBOX_ACCESS_TOKEN_HERE!
-  mapboxgl.accessToken =
-    '';
+  mapboxgl.accessToken = '';
 
   const geojson = {
     type: 'FeatureCollection',

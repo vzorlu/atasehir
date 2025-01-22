@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if image.lang and image.long %}
         const popupContent_{{ image.id }} = `
             <div class="p-2">
-                <img src="{{ image.image.url }}" width="150" class="mb-2">
+                <img src="https://atasehir.algi.ai/{{ image.image.url }}" width="150" class="mb-2">
                 <p class="mb-1"><strong>ID:</strong> {{ image.id }}</p>
                 <p class="mb-1"><strong>Tarih:</strong> {{ image.timestamp|date:"d.m.Y H:i:s" }}</p>
                 <p class="mb-1"><strong>Adres:</strong> {{ image.fulladdress }}</p>
