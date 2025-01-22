@@ -17,16 +17,18 @@ yolo_model = YOLO("yolov8n.pt")
 
 def extract_area(address):
     parts = [part.strip() for part in address.split(",")]
-
+    print(parts)
     for part in parts:
         if "Sokak" in part:
             return part
         elif "Caddesi" in part:
+            print(part)
             return part
 
     # If no street/avenue found, return neighborhood
     for part in parts:
         if part and part not in ["", " "]:
+            print(part)
             return part
 
     return None
