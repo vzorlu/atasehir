@@ -20,7 +20,7 @@
 <script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&v=beta"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -36,25 +36,29 @@ document.addEventListener('DOMContentLoaded', function() {
     let map;
     let marker;
 
-    function initMap(lat, lng) {
+    async function initMap(lat, lng) {
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
         const location = { lat: parseFloat(lat), lng: parseFloat(lng) };
 
         if (!map) {
-            map = new google.maps.Map(document.getElementById('map'), {
+            map = new Map(document.getElementById('map'), {
                 zoom: 15,
                 center: location,
+                mapId: 'DEMO_MAP_ID'
             });
         } else {
             map.setCenter(location);
         }
 
         if (marker) {
-            marker.setMap(null);
+            marker.map = null;
         }
 
-        marker = new google.maps.Marker({
-            position: location,
+        marker = new AdvancedMarkerElement({
             map: map,
+            position: location,
             title: 'Tespit Konumu'
         });
     }

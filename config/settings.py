@@ -10,8 +10,7 @@ load_dotenv()  # Load environment variables from .env.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", default="")
 DEBUG = True
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1"]
 # Django Environment
 ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
@@ -184,7 +183,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-
+GOOGLE_MAPS_API_KEY = os.environ.get("GOOGLE_MAPS_API_KEY")
+print(GOOGLE_MAPS_API_KEY)
 LOGIN_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/login/"
 
