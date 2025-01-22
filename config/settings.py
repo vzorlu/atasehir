@@ -10,7 +10,7 @@ load_dotenv()  # Load environment variables from .env.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", default="")
 DEBUG = True
-ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1", "148.251.52.194"]
 # Django Environment
 ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
@@ -125,8 +125,11 @@ DATABASES = {
         "NAME": "atasehir_db",
         "USER": "atasehir_user",
         "PASSWORD": "your_password",
-        "HOST": "localhost",
+        "HOST": "148.251.52.194",
         "PORT": "5432",
+        "OPTIONS": {
+            "sslmode": "require",
+        },
     }
 }
 
@@ -191,10 +194,13 @@ CSRF_TRUSTED_ORIGINS = [
     "https://hub.algi.ai",
     "http://20.79.168.164/",
     "http://20.79.168.164:8000",
-    "http://127.0.0.1:8000",
     "http://0.0.0.0:8000",
     "https://atasehir.algi.ai",
     "http://148.251.52.194/http://192.168.1.9:8000",
+    "http://148.251.52.194",
+    "https://148.251.52.194",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 
