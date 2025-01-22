@@ -4,6 +4,7 @@ from django.conf import settings
 
 # models.py'da Way modeliniz zaten şu şekilde revize edilmiş olsun (daha önce konuştuğumuz gibi):
 
+
 class Way(models.Model):
     base_type = models.CharField(max_length=50)
     way_id = models.IntegerField(unique=True)
@@ -19,9 +20,11 @@ class Way(models.Model):
     lanes = models.CharField(max_length=10, null=True, blank=True)
     nat_ref = models.CharField(max_length=50, null=True, blank=True)
     toll = models.CharField(max_length=10, null=True, blank=True)
+    tracker_id = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.name
+
 
 # Department modeline dokunmuyoruz.
 
@@ -32,9 +35,5 @@ class Department(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='council_departments',
-        null=True,
-        blank=True
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="council_departments", null=True, blank=True
     )

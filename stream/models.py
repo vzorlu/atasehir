@@ -8,6 +8,7 @@ class StreamImage(models.Model):
     lang = models.FloatField(null=True, blank=True)
     long = models.FloatField(null=True, blank=True)
     fulladdress = models.TextField(null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
     deviceuuid = models.CharField(max_length=255, null=True, blank=True)  # Renamed from 'device'
 
     def __str__(self):

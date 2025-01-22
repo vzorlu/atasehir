@@ -15,6 +15,23 @@ logger = logging.getLogger(__name__)
 yolo_model = YOLO("yolov8n.pt")
 
 
+def extract_area(address):
+    parts = [part.strip() for part in address.split(",")]
+
+    for part in parts:
+        if "Sokak" in part:
+            return part
+        elif "Caddesi" in part:
+            return part
+
+    # If no street/avenue found, return neighborhood
+    for part in parts:
+        if part and part not in ["", " "]:
+            return part
+
+    return None
+
+
 class StreamImageViewSet(viewsets.ModelViewSet):
     queryset = StreamImage.objects.prefetch_related("detections").all()
     serializer_class = StreamImageSerializer
@@ -25,9 +42,16 @@ class StreamImageViewSet(viewsets.ModelViewSet):
         temp_file = None
 
         try:
+            # Extract area from fulladdress
+            fulladdress = request.data.get("fulladdress", [""])[0]
+            area = extract_area(fulladdress)
+
+            # Update request data with area
+            mutable_data = request.data.copy()
+            mutable_data["area"] = area
+
             # Validate and save StreamImage
-            print("request.data", request.data)
-            serializer = self.get_serializer(data=request.data)
+            serializer = self.get_serializer(data=mutable_data)
             serializer.is_valid(raise_exception=True)
             stream_image = serializer.save()
             logger.info("Step 2: Validated data, saved StreamImage")
