@@ -36,39 +36,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     {% for image in stream_images %}
     {% if image.lang and image.long %}
-        // Create popup content
-        const popup = new mapboxgl.Popup({offset: 25})
-            .setHTML(`
-                <div class="p-2">
-                    <img src="{{ image.image.url }}" width="150" class="mb-2">
-                    <p class="mb-1"><strong>ID:</strong> {{ image.id }}</p>
-                    <p class="mb-1"><strong>Tarih:</strong> {{ image.timestamp|date:"d.m.Y H:i:s" }}</p>
-                    <p class="mb-1"><strong>Adres:</strong> {{ image.fulladdress }}</p>
-                    <button class="btn btn-primary btn-sm" onclick="showDetails('{{ image.id }}')">
-                        Detaylar
-                    </button>
-                </div>
-            `);
+        const popupContent_{{ image.id }} = `
+            <div class="p-2">
+                <img src="{{ image.image.url }}" width="150" class="mb-2">
+                <p class="mb-1"><strong>ID:</strong> {{ image.id }}</p>
+                <p class="mb-1"><strong>Tarih:</strong> {{ image.timestamp|date:"d.m.Y H:i:s" }}</p>
+                <p class="mb-1"><strong>Adres:</strong> {{ image.fulladdress }}</p>
+                <button class="btn btn-primary btn-sm" onclick="showDetails('{{ image.id }}')">
+                    Detaylar
+                </button>
+            </div>
+        `;
 
-        // Create marker element
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.backgroundImage = `url({% static 'img/marker.png' %})`;
-        el.style.width = '32px';
-        el.style.height = '32px';
-        el.style.backgroundSize = '100%';
-
-        // Add marker to map
-        new mapboxgl.Marker(el)
+        const marker_{{ image.id }} = new mapboxgl.Marker()
             .setLngLat([{{ image.long }}, {{ image.lang }}])
-            .setPopup(popup)
+            .setPopup(new mapboxgl.Popup({offset: 25}).setHTML(popupContent_{{ image.id }}))
             .addTo(map);
 
         bounds.extend([{{ image.long }}, {{ image.lang }}]);
     {% endif %}
     {% endfor %}
 
-    // Fit map to markers
     if (!bounds.isEmpty()) {
         map.fitBounds(bounds, {
             padding: 50
