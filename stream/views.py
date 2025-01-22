@@ -9,6 +9,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import os
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,23 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 
             # Final step: Return response
             logger.info("Step 6: Returning response")
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+            # Handle YOLO detections
+            if "detections" in request.data:
+                detections = request.data["detections"]
+                for det in detections:
+                    # Convert tensor values to Python scalars
+                    Detection.objects.create(
+                        image=stream_image,
+                        class_name=det["class_name"],
+                        x_coord=float(det["x_coord"].item() if torch.is_tensor(det["x_coord"]) else det["x_coord"]),
+                        y_coord=float(det["y_coord"].item() if torch.is_tensor(det["y_coord"]) else det["y_coord"]),
+                        confidence=float(
+                            det["confidence"].item() if torch.is_tensor(det["confidence"]) else det["confidence"]
+                        ),
+                    )
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
