@@ -70,7 +70,6 @@ INSTALLED_APPS = [
     "stream",  # Add this line
     "council",
     "import_export",  # Add this line
-    "sslserver",
 ]
 
 MIDDLEWARE = [
