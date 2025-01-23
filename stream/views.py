@@ -3,11 +3,12 @@ import tempfile
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 import logging
 from .models import StreamImage, Detection
-from .serializers import StreamImageSerializer, StreamDetectionSerializer
+from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
+from django.db.models import Count, Exists, OuterRef
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,20 @@ def extract_area(address):
 
 
 class StreamImageViewSet(viewsets.ModelViewSet):
-    queryset = StreamImage.objects.prefetch_related("detections").all()
+    queryset = StreamImage.objects.all()  # Add base queryset
     serializer_class = StreamImageSerializer
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_queryset(self):
+        base_queryset = StreamImage.objects.all()
+
+        has_detections = self.request.query_params.get("has_detections", None)
+        if has_detections == "true":
+            # Use exists() subquery instead of annotation
+            detections_exist = Detection.objects.filter(image=OuterRef("pk"))
+            base_queryset = base_queryset.annotate(has_detections=Exists(detections_exist)).filter(has_detections=True)
+
+        return base_queryset.prefetch_related("detections")
 
     def create(self, request, *args, **kwargs):
         logger.info("Step 1: Incoming data: %s", request.data)
@@ -100,10 +112,16 @@ class StreamImageViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
+    @action(detail=False, methods=["get"])
+    def with_detections(self, request):
+        queryset = StreamImage.objects.annotate(detection_count=Count("detections")).filter(detection_count__gt=0)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class DetectionViewSet(viewsets.ModelViewSet):
     queryset = Detection.objects.all()
-    serializer_class = StreamDetectionSerializer
+    serializer_class = DetectionSerializer
 
 
 @api_view(["GET"])

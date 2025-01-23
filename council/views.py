@@ -10,11 +10,19 @@ class CouncilView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = TemplateLayout.init(self, super().get_context_data(**kwargs))
-        context["stream_images"] = (
-            StreamImage.objects.annotate(detection_count=Count("detections"))
-            .filter(detection_count__gt=0)
+
+        # Get images with detections, including all required fields
+        images_with_detections = (
+            StreamImage.objects.filter(
+                id__in=StreamImage.objects.values("id")
+                .annotate(detection_count=Count("detections"))
+                .filter(detection_count__gt=0)
+                .values_list("id", flat=True)
+            )
             .prefetch_related("detections")
-            .all()
+            .order_by("-timestamp")
         )
+
+        context["stream_images"] = images_with_detections
         context["google_maps_api_key"] = settings.GOOGLE_MAPS_API_KEY
         return context
