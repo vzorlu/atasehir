@@ -6,9 +6,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from rest_framework import status
 from .serializers import UserSerializer
+
 
 class AuthView(TemplateView):
     # Predefined function
@@ -35,12 +35,15 @@ class UserLoginView(APIView):
         if user is not None:
             # Token oluşturma ve yanıt döndürme
             refresh = RefreshToken.for_user(user)
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            })
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                }
+            )
         else:
             return Response({"detail": "Geçersiz kimlik bilgileri"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,3 +52,10 @@ class UserProfileView(APIView):
         # Mevcut kullanıcıyı döndürme
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
