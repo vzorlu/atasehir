@@ -10,7 +10,7 @@ load_dotenv()  # Load environment variables from .env.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", default="")
 DEBUG = True
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "0.0.0.0", "192.168.1.151"]
+ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1"]
 # Django Environment
 ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
@@ -234,20 +234,7 @@ LOGGING = {
     },
 }
 
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-
-# Development SSL
-if DEBUG:
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-
-SSL_CERTIFICATE = "cert.pem"
-SSL_PRIVATE_KEY = "key.pem"
-
+SECURE_SSL_REDIRECT = False
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 500000
 
 # Import Export Settings
