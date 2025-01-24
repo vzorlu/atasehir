@@ -224,9 +224,9 @@ window.addEventListener('load', function() {
             <td>{{ image.id }}</td>
             <td>
               <img src="https://atasehir.algi.ai{{ image.image.url }}"
-                   width="50"
-                   height="50"
-                   class="cursor-pointer"
+                   width="160"
+                   height="120"
+                   class="cursor-pointer ti-border-radius"
                    onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
             </td>
             <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
