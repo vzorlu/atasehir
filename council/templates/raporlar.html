@@ -72,6 +72,7 @@ window.addEventListener('load', function() {
 
     if (dt_basic_table.length) {
       dt_basic = dt_basic_table.DataTable({
+        order: [[0, 'desc']], // Set default sort
         dom: '<"card-header flex-column flex-md-row"<"head-label text-center"><"dt-action-buttons text-end pt-3 pt-md-0"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
         displayLength: 10,
         lengthMenu: [10, 25, 50, 75, 100],
@@ -112,9 +113,6 @@ window.addEventListener('load', function() {
           url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
         }
       });
-      dt_basic_table.dataTable({
-        order: [[0, 'asc']]
-      })
     }
   });
 </script>
