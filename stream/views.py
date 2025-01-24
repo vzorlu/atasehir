@@ -9,6 +9,7 @@ from .models import StreamImage, Detection
 from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 from django.db.models import Count, Exists, OuterRef
+from rest_framework.filters import OrderingFilter
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,9 @@ class StreamImageViewSet(viewsets.ModelViewSet):
     queryset = StreamImage.objects.all()  # Add base queryset
     serializer_class = StreamImageSerializer
     parser_classes = (MultiPartParser, FormParser)
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["timestamp", "processed", "area", "detection_count"]
+    ordering = ["-timestamp"]  # Default sorting
 
     def get_queryset(self):
         base_queryset = StreamImage.objects.all()
@@ -122,6 +126,9 @@ class StreamImageViewSet(viewsets.ModelViewSet):
 class DetectionViewSet(viewsets.ModelViewSet):
     queryset = Detection.objects.all()
     serializer_class = DetectionSerializer
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["timestamp", "confidence", "class_name"]
+    ordering = ["-timestamp"]  # Default sorting
 
 
 @api_view(["GET"])
