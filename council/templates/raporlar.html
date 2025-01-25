@@ -36,11 +36,7 @@
 {{ block.super }}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 {% endblock %}
-
 {{ block.super }}
-
-
-
 {% block content %}
 
 
@@ -93,12 +89,16 @@
           </td>
           <td>{{ image.id }}</td>
           <td>
-            <img src="https://atasehir.algi.ai{{ image.image.url }}"
-                 width="50" height="50"
-                 class="cursor-pointer"
-                 data-bs-toggle="modal"
-                 data-bs-target="#imageModal"
-                 onclick="showImageInModal(this.src)">
+            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal-{{ image.id }}">
+              <img src="https://atasehir.algi.ai{{ image.image.url }}" width="120" class="cursor-pointer">
+            </a>
+            <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ image.id }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <img src="https://atasehir.algi.ai{{ image.image.url }}" class="img-fluid">
+                </div>
+              </div>
+            </div>
           </td>
           <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
           <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
@@ -191,9 +191,6 @@
 <style>
 .btn-expand i {
   transition: transform 0.2s;
-}
-.parent-row {
-  background-color: #f8f9fa;
 }
 </style>
 {% endblock %}
