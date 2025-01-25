@@ -20,7 +20,9 @@ class CouncilView(TemplateView):
 
 
 def images_with_detections(request):
-    stream_images = StreamImage.objects.all().order_by("-id")
+    stream_images = StreamImage.objects.prefetch_related("detection_set").order_by(
+        "-id"
+    )  # Fetch related detections efficiently
 
     context = {"stream_images": stream_images, "layout_path": "layouts/content.html"}
 
