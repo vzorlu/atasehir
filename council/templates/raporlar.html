@@ -209,23 +209,18 @@ window.addEventListener('load', function() {
         return address.includes(neighborhood);
       }
     );
+});
 
+$(document).ready(function() {
     {% for image in stream_images %}
-        console.log('Image ID:', {{ image.id }});
-        console.log('Image Data:', {
+        console.log('Image:', {
             id: {{ image.id }},
-            timestamp: '{{ image.timestamp|date:"Y-m-d H:i:s" }}',
-            processed: '{{ image.processed }}',
-            address: '{{ image.fulladdress|escapejs }}',
-            device: '{{ image.deviceuuid }}',
-            lat: '{{ image.lang }}',
-            lng: '{{ image.long }}',
             detections: [
-                {% for detection in image.detection_set.all %}
+                {% for detection in image.detections.all %}
                 {
+                    id: {{ detection.id }},
                     class_name: '{{ detection.class_name }}',
-                    confidence: {{ detection.confidence }},
-                    timestamp: '{{ detection.timestamp|date:"Y-m-d H:i:s" }}'
+                    confidence: {{ detection.confidence }}
                 }{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ]
