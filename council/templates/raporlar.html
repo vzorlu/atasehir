@@ -272,51 +272,66 @@ $(document).ready(function() {
     <table class="datatables-basic table border-top" id="streamImagesTable">
       <thead>
         <tr>
+          <th></th>
           <th>ID</th>
           <th>Görüntü</th>
           <th>Tarih</th>
           <th>İşlendi</th>
           <th>Adres</th>
           <th>Cihaz ID</th>
-          <th>Tespit Türü</th>
-          <th>Doğruluk</th>
-          <th>Tespit Zamanı</th>
         </tr>
       </thead>
       <tbody>
         {% for image in stream_images %}
-          {% for detection in image.detections.all %}
-          <tr class="detail-row cursor-pointer"
-              data-id="{{ image.id }}"
-              data-image="https://atasehir.algi.ai{{ image.image.url }}"
-              data-lat="{{ image.lang }}"
-              data-lng="{{ image.long }}"
-              data-date="{{ image.timestamp|date:'d.m.Y H:i:s' }}"
-              data-address="{{ image.fulladdress }}"
-              data-device="{{ image.deviceuuid }}"
-              data-detection="{{ detection.class_name }}">
-            <td>{{ image.id }}</td>
-            <td>
-              <img src="https://atasehir.algi.ai{{ image.image.url }}"
-                   width="160"
-                   height="120"
-                   class="cursor-pointer ti-border-radius"
-                   onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
-            </td>
-            <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
-            <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
-            <td>{{ image.fulladdress }}</td>
-            <td>{{ image.deviceuuid }}</td>
-            <td>{{ detection.class_name }}</td>
-            <td>
-              <div class="progress" style="height: 6px;">
-                <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
-              </div>
-              {{ detection.confidence|floatformat:2 }}
-            </td>
-            <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
-          </tr>
-          {% endfor %}
+        <tr class="parent-row">
+          <td>
+            <button class="btn btn-sm btn-icon btn-expand" data-bs-toggle="collapse"
+                    data-bs-target="#detections-{{image.id}}" aria-expanded="false">
+              <i class="ti ti-chevron-right"></i>
+            </button>
+          </td>
+          <td>{{ image.id }}</td>
+          <td>
+            <img src="https://atasehir.algi.ai{{ image.image.url }}"
+                 width="50" height="50"
+                 class="cursor-pointer"
+                 onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
+          </td>
+          <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
+          <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
+          <td>{{ image.fulladdress }}</td>
+          <td>{{ image.deviceuuid }}</td>
+        </tr>
+        <tr class="collapse" id="detections-{{image.id}}">
+          <td colspan="7">
+            <div class="p-3">
+              <h6 class="mb-3">Tespitler</h6>
+              <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th>Tespit Türü</th>
+                    <th>Doğruluk</th>
+                    <th>Tespit Zamanı</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for detection in image.detections.all %}
+                  <tr>
+                    <td>{{ detection.class_name }}</td>
+                    <td>
+                      <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
+                      </div>
+                      {{ detection.confidence|floatformat:2 }}
+                    </td>
+                    <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -357,6 +372,11 @@ $(document).ready(function() {
 </div>
 
 <style>
-
+.btn-expand i {
+  transition: transform 0.2s;
+}
+.parent-row {
+  background-color: #f8f9fa;
+}
 </style>
 {% endblock %}
