@@ -275,6 +275,7 @@ $(document).ready(function() {
           <th>ID</th>
           <th>Görüntü</th>
           <th>Tarih</th>
+          <th>İşlendi</th>
           <th>Adres</th>
           <th>Cihaz ID</th>
           <th>Tespit Türü</th>
@@ -284,6 +285,7 @@ $(document).ready(function() {
       </thead>
       <tbody>
         {% for image in stream_images %}
+          {% for detection in image.detections.all %}
           <tr class="detail-row cursor-pointer"
               data-id="{{ image.id }}"
               data-image="https://atasehir.algi.ai{{ image.image.url }}"
@@ -302,17 +304,19 @@ $(document).ready(function() {
                    onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
             </td>
             <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
+            <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
             <td>{{ image.fulladdress }}</td>
             <td>{{ image.deviceuuid }}</td>
-            <td>{{ image.detection.class_name }}</td>
+            <td>{{ detection.class_name }}</td>
             <td>
               <div class="progress" style="height: 6px;">
-                <div class="progress-bar" style="width: {{ image.detection.confidence|multiply:100 }}%"></div>
+                <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
               </div>
-              {{ image.detection.confidence|floatformat:2 }}
+              {{ detection.confidence|floatformat:2 }}
             </td>
-            <td>{{ image.detection.timestamp|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
           </tr>
+          {% endfor %}
         {% endfor %}
       </tbody>
     </table>
