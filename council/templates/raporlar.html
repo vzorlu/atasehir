@@ -209,6 +209,28 @@ window.addEventListener('load', function() {
         return address.includes(neighborhood);
       }
     );
+
+    {% for image in stream_images %}
+        console.log('Image ID:', {{ image.id }});
+        console.log('Image Data:', {
+            id: {{ image.id }},
+            timestamp: '{{ image.timestamp|date:"Y-m-d H:i:s" }}',
+            processed: '{{ image.processed }}',
+            address: '{{ image.fulladdress|escapejs }}',
+            device: '{{ image.deviceuuid }}',
+            lat: '{{ image.lang }}',
+            lng: '{{ image.long }}',
+            detections: [
+                {% for detection in image.detection_set.all %}
+                {
+                    class_name: '{{ detection.class_name }}',
+                    confidence: {{ detection.confidence }},
+                    timestamp: '{{ detection.timestamp|date:"Y-m-d H:i:s" }}'
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        });
+    {% endfor %}
 });
 </script>
 {% endblock page_js %}
@@ -258,7 +280,6 @@ window.addEventListener('load', function() {
           <th>ID</th>
           <th>Görüntü</th>
           <th>Tarih</th>
-          <th>İşlendi</th>
           <th>Adres</th>
           <th>Cihaz ID</th>
           <th>Tespit Türü</th>
@@ -286,7 +307,6 @@ window.addEventListener('load', function() {
                    onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
             </td>
             <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
-            <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
             <td>{{ image.fulladdress }}</td>
             <td>{{ image.deviceuuid }}</td>
             <td>{{ image.detection.class_name }}</td>
