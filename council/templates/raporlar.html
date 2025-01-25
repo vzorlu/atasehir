@@ -40,32 +40,64 @@
 {% block page_js %}
 {{ block.super }}
 <script>
-window.addEventListener('load', function() {
-  mapboxgl.accessToken = 'pk.eyJ1Ijoidm9sa2Fuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable first
+    var table = $('.datatables-basic').DataTable({
+        "deferRender": true,
+        "processing": true,
+        "pageLength": 10,
+        "initComplete": function() {
+            initializeMaps();
+        }
+    });
 
-    {% for image in stream_images %}
-    {% if image.lang and image.long %}
-    try {
-        const map = new mapboxgl.Map({
-            container: 'map-{{ image.id }}',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [{{ image.long }}, {{ image.lang }}],
-            zoom: 14
-        });
+    // Initialize maps after table is ready
+    function initializeMaps() {
+        mapboxgl.accessToken = 'pk.eyJ1Ijoidm9sa2Fuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
 
-        new mapboxgl.Marker()
-            .setLngLat([{{ image.long }}, {{ image.lang }}])
-            .setPopup(new mapboxgl.Popup().setHTML(`
-                <h6>Location Details</h6>
-                <p>{{ image.fulladdress }}</p>
-                <p>Area: {{ image.area }}</p>
-            `))
-            .addTo(map);
-    } catch (e) {
-        console.error('Map initialization error for image {{ image.id }}:', e);
+        {% for image in stream_images %}
+        {% if image.lang and image.long %}
+        try {
+            const mapContainer = document.getElementById('map-{{ image.id }}');
+            if (mapContainer) {
+                const map = new mapboxgl.Map({
+                    container: 'map-{{ image.id }}',
+                    style: 'mapbox://styles/mapbox/streets-v12',
+                    center: [{{ image.long }}, {{ image.lang }}],
+                    zoom: 12
+                });
+            }
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+        {% endif %}
+        {% endfor %}
     }
-    {% endif %}
-    {% endfor %}
+
+    // Additional JavaScript code
+    const detectionSelect = $('#detectionSelect');
+    const showAllFrames = $('#showAllFrames');
+
+    detectionSelect.change(function() {
+        table.draw();
+    });
+
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            const showAll = showAllFrames.prop('checked');
+            const selectedType = detectionSelect.val();
+            const detectionType = data[6]; // Assuming detection type is in column 7
+
+            if (showAll) return true;
+            if (!selectedType) return true;
+
+            return detectionType.toLowerCase() === selectedType.toLowerCase();
+        }
+    );
+
+    $('#neighborhoodSelect').select2({
+        placeholder: 'Mahalle seçin...'
+    });
 });
 
   $(function () {
@@ -117,36 +149,7 @@ window.addEventListener('load', function() {
     }
   });
 
-  $(document).ready(function() {
-    $('.detail-row').on('click', function() {
-        const row = $(this);
-        const modal = new bootstrap.Modal(document.getElementById('detailModal'));
 
-        // Set modal content
-        $('#modalImage').attr('src', row.data('image'));
-        $('#modalId').text(row.data('id'));
-        $('#modalDate').text(row.data('date'));
-        $('#modalAddress').text(row.data('address'));
-        $('#modalDevice').text(row.data('device'));
-        $('#modalDetection').text(row.data('detection'));
-
-        // Initialize map
-        const map = new mapboxgl.Map({
-            container: 'modalMap',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [row.data('lng'), row.data('lat')],
-            zoom: 14
-        });
-
-        new mapboxgl.Marker()
-            .setLngLat([row.data('lng'), row.data('lat')])
-            .addTo(map);
-
-        modal.show();
-
-        // Trigger map resize after modal is shown
-        map.resize();
-    });
 
     const detectionSelect = $('#detectionType');
     const showAllFrames = $('#showAllFrames');
@@ -211,6 +214,7 @@ window.addEventListener('load', function() {
     );
 });
 
+
 $(document).ready(function() {
     {% for image in stream_images %}
         console.log('Image:', {
@@ -262,12 +266,52 @@ $(document).ready(function() {
         initializeMaps();
     });
 });
+
+// Add this before your existing initializeMaps function
+
+$(document).ready(function() {
+    try {
+        // Ensure table has proper structure
+        if (!$('table thead').length) {
+            console.warn('Table missing thead, adding default structure');
+            $('table').prepend('<thead><tr></tr></thead>');
+
+            // Add headers if none exist
+            const columnCount = $('table tr:first td').length;
+            for (let i = 0; i < columnCount; i++) {
+                $('table thead tr').append('<th></th>');
+            }
+        }
+
+        // Initialize DataTable with options
+        const table = $('table').DataTable({
+            pageLength: 10,
+            responsive: true,
+            ordering: true,
+            searching: true,
+            columnDefs: [{
+                targets: '_all',
+                defaultContent: ''
+            }],
+            language: {
+                emptyTable: 'No data available'
+            }
+        });
+    } catch (error) {
+        console.error('DataTable initialization error:', error);
+    }
+});
+
+// ...existing code...
 </script>
 
 <!-- Add this JavaScript -->
 <script>
 function showImageInModal(imageUrl) {
-    document.getElementById('modalImage').src = imageUrl;
+    const modalImage = document.getElementById('modalImage');
+    if (modalImage) {
+        modalImage.src = imageUrl;
+    }
 }
 
 // Initialize all Bootstrap modals
@@ -344,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
                  class="cursor-pointer"
                  data-bs-toggle="modal"
                  data-bs-target="#imageModal"
-                 onclick="showImageInModal('https://atasehir.algi.ai{{ image.image.url }}')">
+                 onclick="showImageInModal(this.src)">
           </td>
           <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
           <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
@@ -421,17 +465,17 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Add this modal structure to bottom of body -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body text-center">
-        <img id="modalImage" src="" class="img-fluid">
-      </div>
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid">
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <style>
