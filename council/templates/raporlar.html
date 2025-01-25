@@ -95,7 +95,25 @@
             <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ image.id }}" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                  <img src="https://atasehir.algi.ai{{ image.image.url }}" class="img-fluid">
+                  <canvas id="canvas-{{ image.id }}"></canvas>
+                  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+                  <script>
+                    var canvas = new fabric.Canvas('canvas-{{ image.id }}');
+                    var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+                    fabric.Image.fromURL(imageUrl, function(img) {
+                      canvas.setWidth(img.width);
+                      canvas.setHeight(img.height);
+                      canvas.add(img);
+                      // Örnek çizim
+                      var circle = new fabric.Circle({
+                        left: {{ image.x_coord|default:0 }},
+                        top: {{ image.y_coord|default:0 }},
+                        radius: 10,
+                        fill: 'red'
+                      });
+                      canvas.add(circle);
+                    });
+                  </script>
                 </div>
               </div>
             </div>
