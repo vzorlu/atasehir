@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock vendor_css %}
 
 {% block vendor_js %}
@@ -23,7 +24,7 @@
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
-
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -115,95 +116,142 @@ window.addEventListener('load', function() {
       });
     }
   });
+
+  $(document).ready(function() {
+    $('.detail-row').on('click', function() {
+        const row = $(this);
+        const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+
+        // Set modal content
+        $('#modalImage').attr('src', row.data('image'));
+        $('#modalId').text(row.data('id'));
+        $('#modalDate').text(row.data('date'));
+        $('#modalAddress').text(row.data('address'));
+        $('#modalDevice').text(row.data('device'));
+        $('#modalDetection').text(row.data('detection'));
+
+        // Initialize map
+        const map = new mapboxgl.Map({
+            container: 'modalMap',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [row.data('lng'), row.data('lat')],
+            zoom: 14
+        });
+
+        new mapboxgl.Marker()
+            .setLngLat([row.data('lng'), row.data('lat')])
+            .addTo(map);
+
+        modal.show();
+
+        // Trigger map resize after modal is shown
+        map.resize();
+    });
+
+    const detectionSelect = $('#detectionType');
+    const showAllFrames = $('#showAllFrames');
+
+    // Initially hide detection type select
+    detectionSelect.hide();
+
+    showAllFrames.change(function() {
+      if (!this.checked) {
+        detectionSelect.show();
+      } else {
+        detectionSelect.hide();
+      }
+
+      // Refresh DataTable with new filter
+      dt_basic.draw();
+    });
+
+    detectionSelect.change(function() {
+      dt_basic.draw();
+    });
+
+    // Add custom filtering function
+    $.fn.dataTable.ext.search.push(
+      function(settings, data, dataIndex) {
+        const showAll = showAllFrames.prop('checked');
+        const selectedType = detectionSelect.val();
+        const detectionType = data[6]; // Assuming detection type is in column 7
+
+        if (showAll) return true;
+        if (!selectedType) return true;
+
+        return detectionType.toLowerCase() === selectedType.toLowerCase();
+      }
+    );
+
+    // Initialize Select2
+    $('#neighborhoodSelect').select2({
+      placeholder: 'Mahalle seçin...',
+      allowClear: true
+    });
+
+    // Add search functionality
+    $('#searchBox').on('keyup', function() {
+      dt_basic.search(this.value).draw();
+    });
+
+    // Add neighborhood filter
+    $('#neighborhoodSelect').on('change', function() {
+      dt_basic.draw();
+    });
+
+    // Update DataTables search function
+    $.fn.dataTable.ext.search.push(
+      function(settings, data, dataIndex) {
+        const neighborhood = $('#neighborhoodSelect').val();
+        const address = data[4]; // Assuming address is in column 5
+
+        if (!neighborhood) return true;
+        return address.includes(neighborhood);
+      }
+    );
+});
 </script>
 {% endblock page_js %}
 
 {% block content %}
-<div class="row mb-6 g-6">
-  <div class="col-md-6">
-    <div class="card h-100">
-      <div class="card-body row widget-separator g-0">
-        <div class="col-sm-5 border-shift border-end pe-sm-6">
-          <h3 class="text-primary d-flex align-items-center gap-2 mb-2">Başarım Oranı<i class="ti ti-star-filled ti-32px"></i></h3>
-          <p class="h6 mb-2">Bu Ay Kapanan Görevler</p>
-          <p class="pe-2 mb-2">Geçen aya oranla %20 daha yüksek</p>
-          <span class="badge bg-label-primary mb-4 mb-sm-0">Son Kapanan Görevler</span>
-          <hr class="d-sm-none">
-        </div>
 
-
-        <div class="col-sm-7 gap-2 text-nowrap d-flex flex-column justify-content-between ps-sm-6 pt-2 py-sm-2">
-          <h3 class="text-primary d-flex align-items-center gap-2 mb-2">En çok tespit edile modeller</h3>
-
-          <div class="d-flex align-items-center gap-2">
-            <small>5 Star</small>
-            <div class="progress w-100 bg-label-primary" style="height:8px;">
-              <div class="progress-bar bg-primary" role="progressbar" style="width: 85%" aria-valuenow="61.50" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="w-px-20 text-end">124</small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <small>4 Star</small>
-            <div class="progress w-100 bg-label-primary" style="height:8px;">
-              <div class="progress-bar bg-primary" role="progressbar" style="width: 50%" aria-valuenow="24" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="w-px-20 text-end">40</small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <small>3 Star</small>
-            <div class="progress w-100 bg-label-primary" style="height:8px;">
-              <div class="progress-bar bg-primary" role="progressbar" style="width: 35%" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="w-px-20 text-end">12</small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <small>2 Star</small>
-            <div class="progress w-100 bg-label-primary" style="height:8px;">
-              <div class="progress-bar bg-primary" role="progressbar" style="width: 18%" aria-valuenow="7" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="w-px-20 text-end">7</small>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <small>1 Star</small>
-            <div class="progress w-100 bg-label-primary" style="height:8px;">
-              <div class="progress-bar bg-primary" role="progressbar" style="width: 10%" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <small class="w-px-20 text-end">2</small>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="card h-100">
-      <div class="card-body row">
-        <div class="col-sm-5">
-          <div class="mb-12">
-            <h5 class="mb-2 text-nowrap">Sürüş Mesafesi</h5>
-            <p class="mb-0"> <span class="me-2">Araç sayısı</span> <span class="badge bg-label-success">1</span></p>
-          </div>
-
-          <div>
-            <h6 class="mb-2 fw-normal">
-              Geçen Aya oranla <span class="text-success me-1">87%</span>artış
-            </h6>
-            <small>Haftalık Rapor</small>
-          </div>
-        </div>
-        <div class="col-sm-7 d-flex justify-content-sm-end align-items-end">
-          <div id="reviewsChart"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Add this after your first card sections, before the existing for loop -->
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
   <div class="card-datatable table-responsive">
+    <!-- Add filter controls -->
+    <div class="row mb-3 px-4 pt-2">
+      <div class="col-md-3">
+        <input type="text" id="searchBox" class="form-control" placeholder="Ara...">
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" id="neighborhoodSelect">
+          <option value="">Tüm Mahalleler</option>
+          <option value="Atatürk">Atatürk</option>
+          <option value="Barbaros">Barbaros</option>
+          <option value="Esatpaşa">Esatpaşa</option>
+          <option value="Fetih">Fetih</option>
+          <option value="İçerenköy">İçerenköy</option>
+          <!-- Add more neighborhoods as needed -->
+        </select>
+      </div>
+      <div class="col-md-6">
+        <!-- Existing filters -->
+        <div class="d-flex align-items-center">
+          <div class="form-check me-3">
+            <input class="form-check-input" type="checkbox" id="showAllFrames">
+            <label class="form-check-label" for="showAllFrames">Tüm Frame'ler</label>
+          </div>
+          <select class="form-select" id="detectionType" style="width: 200px;">
+            <option value="">Tespit Türü Seçin</option>
+            <option value="cukur">Çukur</option>
+            <option value="catlak">Çatlak</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- Existing table -->
     <table class="datatables-basic table border-top" id="streamImagesTable">
       <thead>
         <tr>
@@ -220,7 +268,15 @@ window.addEventListener('load', function() {
       </thead>
       <tbody>
         {% for image in stream_images %}
-          <tr>
+          <tr class="detail-row cursor-pointer"
+              data-id="{{ image.id }}"
+              data-image="https://atasehir.algi.ai{{ image.image.url }}"
+              data-lat="{{ image.lang }}"
+              data-lng="{{ image.long }}"
+              data-date="{{ image.timestamp|date:'d.m.Y H:i:s' }}"
+              data-address="{{ image.fulladdress }}"
+              data-device="{{ image.deviceuuid }}"
+              data-detection="{{ detection.class_name }}">
             <td>{{ image.id }}</td>
             <td>
               <img src="https://atasehir.algi.ai{{ image.image.url }}"
@@ -248,8 +304,38 @@ window.addEventListener('load', function() {
   </div>
 </div>
 
-
-
+<!-- Add modal structure -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tespit Detayları</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <img id="modalImage" src="" class="img-fluid rounded mb-3" alt="Detection Image">
+          </div>
+          <div class="col-md-6">
+            <div id="modalMap" style="height: 300px;" class="mb-3"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <table class="table">
+              <tr><td>ID:</td><td id="modalId"></td></tr>
+              <tr><td>Tarih:</td><td id="modalDate"></td></tr>
+              <tr><td>Adres:</td><td id="modalAddress"></td></tr>
+              <tr><td>Cihaz ID:</td><td id="modalDevice"></td></tr>
+              <tr><td>Tespit Türü:</td><td id="modalDetection"></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
 
