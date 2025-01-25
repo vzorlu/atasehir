@@ -228,6 +228,18 @@ $(document).ready(function() {
     {% endfor %}
 });
 </script>
+
+<!-- Add this JavaScript -->
+<script>
+function showImageInModal(imageUrl) {
+    document.getElementById('modalImage').src = imageUrl;
+}
+
+// Initialize all Bootstrap modals
+document.addEventListener('DOMContentLoaded', function() {
+    var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+});
+</script>
 {% endblock page_js %}
 
 {% block content %}
@@ -295,7 +307,9 @@ $(document).ready(function() {
             <img src="https://atasehir.algi.ai{{ image.image.url }}"
                  width="50" height="50"
                  class="cursor-pointer"
-                 onclick="openImageModal('{{ image.id }}', 'https://atasehir.algi.ai{{ image.image.url }}')">
+                 data-bs-toggle="modal"
+                 data-bs-target="#imageModal"
+                 onclick="showImageInModal('https://atasehir.algi.ai{{ image.image.url }}')">
           </td>
           <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
           <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
@@ -366,6 +380,20 @@ $(document).ready(function() {
             </table>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this modal structure to bottom of body -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" class="img-fluid">
       </div>
     </div>
   </div>
