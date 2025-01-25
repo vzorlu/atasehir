@@ -10,7 +10,7 @@ load_dotenv()  # Load environment variables from .env.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", default="")
 DEBUG = True
-ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["atasehir.algi.ai", "localhost", "127.0.0.1", "148.251.52.194"]
 # Django Environment
 ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
