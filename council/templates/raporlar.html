@@ -100,18 +100,22 @@
                   <script>
                     var canvas = new fabric.Canvas('canvas-{{ image.id }}');
                     var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+
                     fabric.Image.fromURL(imageUrl, function(img) {
                       canvas.setWidth(img.width);
                       canvas.setHeight(img.height);
                       canvas.add(img);
-                      // Örnek çizim
-                      var circle = new fabric.Circle({
-                        left: {{ image.x_coord|default:0 }},
-                        top: {{ image.y_coord|default:0 }},
-                        radius: 10,
-                        fill: 'red'
-                      });
-                      canvas.add(circle);
+
+                      {% for detection in image.detections.all %}
+                        var circle = new fabric.Circle({
+                          left: {{ detection.x_coord }},
+                          top: {{ detection.y_coord }},
+                          radius: 10,
+                          fill: 'red',
+                          opacity: 0.5
+                        });
+                        canvas.add(circle);
+                      {% endfor %}
                     });
                   </script>
                 </div>
