@@ -227,6 +227,41 @@ $(document).ready(function() {
         });
     {% endfor %}
 });
+
+$(document).ready(function() {
+    // Initialize DataTable with proper configuration
+    let table = $('#myTable').DataTable({
+        "deferRender": true,
+        "processing": true,
+        "pageLength": 10,
+        "initComplete": function() {
+            // Initialize maps after table is fully loaded
+            initializeMaps();
+        }
+    });
+
+    // Function to initialize maps
+    function initializeMaps() {
+        $('.map-container').each(function() {
+            const mapId = $(this).attr('id');
+            if (mapId && document.getElementById(mapId)) {
+                try {
+                    new Map({
+                        container: mapId,
+                        // ... other map options
+                    });
+                } catch (error) {
+                    console.warn(`Map initialization failed for ${mapId}:`, error);
+                }
+            }
+        });
+    }
+
+    // Handle dynamic content updates
+    table.on('draw', function() {
+        initializeMaps();
+    });
+});
 </script>
 
 <!-- Add this JavaScript -->
