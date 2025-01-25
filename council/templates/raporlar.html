@@ -1,337 +1,323 @@
 {% extends layout_path %}
-
 {% load static %}
 {% load i18n %}
 {% load stream_filters %}
 
-{% block title %}Detaylı Rapor{% endblock %}
-
 {% block vendor_css %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
+  <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock vendor_css %}
 
 {% block vendor_js %}
-{{ block.super }}
-<script src="{% static 'vendor/libs/moment/moment.js' %}"></script>
-<script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
-<script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
-<script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  {{ block.super }}
+  <script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
+  <script src="{% static 'vendor/libs/moment/moment.js' %}"></script>
+  <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
+  <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
-{{ block.super }}
-<link rel="stylesheet" href="{% static 'vendor/css/pages/app-ecommerce.css' %}" />
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'vendor/css/pages/app-ecommerce.css' %}" />
 {% endblock page_css %}
 
 {% block head %}
-{{ block.super }}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  {{ block.super }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 {% endblock %}
 
 {% block page_js %}
-{{ block.super }}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTable first
-    var table = $('.datatables-basic').DataTable({
-        "deferRender": true,
-        "processing": true,
-        "pageLength": 10,
-        "initComplete": function() {
-            initializeMaps();
-        }
-    });
-
-    // Initialize maps after table is ready
-    function initializeMaps() {
-        mapboxgl.accessToken = 'pk.eyJ1Ijoidm9sa2Fuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
-
-        {% for image in stream_images %}
-        {% if image.lang and image.long %}
-        try {
-            const mapContainer = document.getElementById('map-{{ image.id }}');
-            if (mapContainer) {
-                const map = new mapboxgl.Map({
-                    container: 'map-{{ image.id }}',
-                    style: 'mapbox://styles/mapbox/streets-v12',
-                    center: [{{ image.long }}, {{ image.lang }}],
-                    zoom: 12
-                });
-            }
-        } catch (error) {
-            console.error('Error initializing map:', error);
-        }
-        {% endif %}
-        {% endfor %}
-    }
-
-    // Additional JavaScript code
-    const detectionSelect = $('#detectionSelect');
-    const showAllFrames = $('#showAllFrames');
-
-    detectionSelect.change(function() {
-        table.draw();
-    });
-
-    $.fn.dataTable.ext.search.push(
-        function(settings, data, dataIndex) {
-            const showAll = showAllFrames.prop('checked');
-            const selectedType = detectionSelect.val();
-            const detectionType = data[6]; // Assuming detection type is in column 7
-
-            if (showAll) return true;
-            if (!selectedType) return true;
-
-            return detectionType.toLowerCase() === selectedType.toLowerCase();
-        }
-    );
-
-    $('#neighborhoodSelect').select2({
-        placeholder: 'Mahalle seçin...'
-    });
-});
-
-  $(function () {
-    var dt_basic_table = $('.datatables-basic');
-
-    if (dt_basic_table.length) {
-      dt_basic = dt_basic_table.DataTable({
-        order: [[0, 'desc']], // Set default sort
-        dom: '<"card-header flex-column flex-md-row"<"head-label text-center"><"dt-action-buttons text-end pt-3 pt-md-0"B>><"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>>t<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-        displayLength: 10,
-        lengthMenu: [10, 25, 50, 75, 100],
-        buttons: [
-          {
-            extend: 'collection',
-            className: 'btn btn-label-primary dropdown-toggle me-2',
-            text: '<i class="ti ti-file-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Dışa Aktar</span>',
-            buttons: [
-              {
-                extend: 'print',
-                text: '<i class="ti ti-printer me-1" ></i>Yazdır',
-                className: 'dropdown-item',
-                exportOptions: { columns: [0, 2, 3, 4, 5, 6, 7, 8] }
-              },
-              {
-                extend: 'csv',
-                text: '<i class="ti ti-file-text me-1" ></i>CSV',
-                className: 'dropdown-item',
-                exportOptions: { columns: [0, 2, 3, 4, 5, 6, 7, 8] }
-              },
-              {
-                extend: 'excel',
-                text: '<i class="ti ti-file-spreadsheet me-1"></i>Excel',
-                className: 'dropdown-item',
-                exportOptions: { columns: [0, 2, 3, 4, 5, 6, 7, 8] }
-              },
-              {
-                extend: 'pdf',
-                text: '<i class="ti ti-file-description me-1"></i>PDF',
-                className: 'dropdown-item',
-                exportOptions: { columns: [0, 2, 3, 4, 5, 6, 7, 8] }
-              }
-            ]
-          }
-        ],
-        language: {
-          url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+  {{ block.super }}
+  <script>
+    // 1) document.addEventListener: DataTable ve Map başlatma
+    document.addEventListener('DOMContentLoaded', function () {
+      // DataTable örneği
+      var table = $('.datatables-basic').DataTable({
+        deferRender: true,
+        processing: true,
+        pageLength: 10,
+        initComplete: function () {
+          // Tablo yüklenince haritaları başlat
+          initializeMaps();
         }
       });
-    }
-  });
 
+      // Haritaları başlatma fonksiyonu
+      function initializeMaps() {
+        mapboxgl.accessToken = 'pk.eyJ1Ijoidm9saFuem9ybHUiLCJhIjoiY202N2pqb24yMDRrOTJpczl3eGRycTFwNyJ9.TnKl17J4LRPuCO_MYal09w';
 
-
-    const detectionSelect = $('#detectionType');
-    const showAllFrames = $('#showAllFrames');
-
-    // Initially hide detection type select
-    detectionSelect.hide();
-
-    showAllFrames.change(function() {
-      if (!this.checked) {
-        detectionSelect.show();
-      } else {
-        detectionSelect.hide();
+        {% for image in stream_images %}
+          {% if image.lang and image.long %}
+            try {
+              const mapContainer = document.getElementById('map-{{ image.id }}');
+              if (mapContainer) {
+                const map = new mapboxgl.Map({
+                  container: 'map-{{ image.id }}',
+                  style: 'mapbox://styles/mapbox/streets-v12',
+                  center: [{{ image.long }}, {{ image.lang }}],
+                  zoom: 12
+                });
+              }
+            } catch (error) {
+              console.error('Error initializing map:', error);
+            }
+          {% endif %}
+        {% endfor %}
       }
 
-      // Refresh DataTable with new filter
-      dt_basic.draw();
+      // Filtre kontrolleri (Tespit türü)
+      const detectionSelect = $('#detectionSelect');
+      const showAllFrames = $('#showAllFrames');
+
+      detectionSelect.change(function () {
+        table.draw();
+      });
+
+      // DataTables'a özel arama eklentisi
+      $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+          const showAll = showAllFrames.prop('checked');
+          const selectedType = detectionSelect.val();
+          const detectionType = data[6]; // 7. sütundaki tespit türü
+
+          if (showAll) return true;
+          if (!selectedType) return true;
+          return detectionType.toLowerCase() === selectedType.toLowerCase();
+        }
+      );
+
+      // Mahalle seçimi
+      $('#neighborhoodSelect').select2({
+        placeholder: 'Mahalle seçin...'
+      });
     });
 
-    detectionSelect.change(function() {
-      dt_basic.draw();
+    // 2) $(function() {...}): dt_basic ayarları
+    $(function () {
+      var dt_basic_table = $('.datatables-basic');
+
+      if (dt_basic_table.length) {
+        dt_basic = dt_basic_table.DataTable({
+          order: [[0, 'desc']], // ID sütununa göre ters sıralama
+          dom:
+            '<"card-header flex-column flex-md-row"<"head-label text-center"><"dt-action-buttons text-end pt-3 pt-md-0"B>>'
+            + '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>'
+            + 't<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+          displayLength: 10,
+          lengthMenu: [10, 25, 50, 75, 100],
+          buttons: [
+            {
+              extend: 'collection',
+              className: 'btn btn-label-primary dropdown-toggle me-2',
+              text:
+                '<i class="ti ti-file-export me-sm-1"></i> <span class="d-none d-sm-inline-block">Dışa Aktar</span>',
+              buttons: [
+                {
+                  extend: 'print',
+                  text: '<i class="ti ti-printer me-1"></i>Yazdır',
+                  className: 'dropdown-item',
+                  exportOptions: { columns: [1, 3, 4, 5, 6, 7, 8] }
+                },
+                {
+                  extend: 'csv',
+                  text: '<i class="ti ti-file-text me-1"></i>CSV',
+                  className: 'dropdown-item',
+                  exportOptions: { columns: [1, 3, 4, 5, 6, 7, 8] }
+                },
+                {
+                  extend: 'excel',
+                  text: '<i class="ti ti-file-spreadsheet me-1"></i>Excel',
+                  className: 'dropdown-item',
+                  exportOptions: { columns: [1, 3, 4, 5, 6, 7, 8] }
+                },
+                {
+                  extend: 'pdf',
+                  text: '<i class="ti ti-file-description me-1"></i>PDF',
+                  className: 'dropdown-item',
+                  exportOptions: { columns: [1, 3, 4, 5, 6, 7, 8] }
+                }
+              ]
+            }
+          ],
+          columnDefs: [
+            { orderable: false, targets: [0, 2] }, // Expand/collapse & görsel sütunu sıralama dışı
+            { searchable: false, targets: [0, 2] } // Expand/collapse & görsel sütunu arama dışı
+          ],
+          language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/tr.json'
+          }
+        });
+      }
     });
 
-    // Add custom filtering function
-    $.fn.dataTable.ext.search.push(
-      function(settings, data, dataIndex) {
+    // 3) $(function() {...}): showAllFrames, detectionType vb.
+    $(function () {
+      const detectionSelect = $('#detectionType');
+      const showAllFrames = $('#showAllFrames');
+
+      // Başlangıçta tespit türü select'i gizli
+      detectionSelect.hide();
+
+      showAllFrames.change(function () {
+        // Tüm Frame'ler işaretli değilse detectionSelect gösterilir
+        if (!this.checked) {
+          detectionSelect.show();
+        } else {
+          detectionSelect.hide();
+        }
+        dt_basic.draw();
+      });
+
+      detectionSelect.change(function () {
+        dt_basic.draw();
+      });
+
+      // DataTable'a ek filtre
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
         const showAll = showAllFrames.prop('checked');
         const selectedType = detectionSelect.val();
-        const detectionType = data[6]; // Assuming detection type is in column 7
+        const detectionType = data[6]; // Tespit türü -> 7. sütun
 
         if (showAll) return true;
         if (!selectedType) return true;
-
         return detectionType.toLowerCase() === selectedType.toLowerCase();
-      }
-    );
+      });
 
-    // Initialize Select2
-    $('#neighborhoodSelect').select2({
-      placeholder: 'Mahalle seçin...',
-      allowClear: true
-    });
+      // Mahalle filtrelemesi için select2
+      $('#neighborhoodSelect').select2({
+        placeholder: 'Mahalle seçin...',
+        allowClear: true
+      });
 
-    // Add search functionality
-    $('#searchBox').on('keyup', function() {
-      dt_basic.search(this.value).draw();
-    });
+      // Metin araması
+      $('#searchBox').on('keyup', function () {
+        dt_basic.search(this.value).draw();
+      });
 
-    // Add neighborhood filter
-    $('#neighborhoodSelect').on('change', function() {
-      dt_basic.draw();
-    });
+      // Mahalle seçimi
+      $('#neighborhoodSelect').on('change', function () {
+        dt_basic.draw();
+      });
 
-    // Update DataTables search function
-    $.fn.dataTable.ext.search.push(
-      function(settings, data, dataIndex) {
+      // Adres sütunu 5. indexte
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
         const neighborhood = $('#neighborhoodSelect').val();
-        const address = data[4]; // Assuming address is in column 5
+        const address = data[4]; // 5. sütun
 
         if (!neighborhood) return true;
         return address.includes(neighborhood);
-      }
-    );
-});
+      });
+    });
 
-
-$(document).ready(function() {
-    {% for image in stream_images %}
+    // Görselleri ve tespitleri konsola yazdırma (örnek)
+    $(document).ready(function () {
+      {% for image in stream_images %}
         console.log('Image:', {
-            id: {{ image.id }},
-            detections: [
-                {% for detection in image.detections.all %}
-                {
-                    id: {{ detection.id }},
-                    class_name: '{{ detection.class_name }}',
-                    confidence: {{ detection.confidence }}
-                }{% if not forloop.last %},{% endif %}
-                {% endfor %}
-            ]
+          id: {{ image.id }},
+          detections: [
+            {% for detection in image.detections.all %}
+              {
+                id: {{ detection.id }},
+                class_name: '{{ detection.class_name }}',
+                confidence: {{ detection.confidence }}
+              }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
         });
-    {% endfor %}
-});
+      {% endfor %}
+    });
 
-$(document).ready(function() {
-    // Initialize DataTable with proper configuration
-    let table = $('#myTable').DataTable({
-        "deferRender": true,
-        "processing": true,
-        "pageLength": 10,
-        "initComplete": function() {
-            // Initialize maps after table is fully loaded
-            initializeMaps();
+    // #myTable DataTable (Eğer ikinci bir tablo varsa)
+    $(document).ready(function () {
+      let table = $('#myTable').DataTable({
+        deferRender: true,
+        processing: true,
+        pageLength: 10,
+        initComplete: function () {
+          // Örneğin ikinci bir harita fonksiyonu
+          initializeMaps2();
         }
-    });
+      });
 
-    // Function to initialize maps
-    function initializeMaps() {
-        $('.map-container').each(function() {
-            const mapId = $(this).attr('id');
-            if (mapId && document.getElementById(mapId)) {
-                try {
-                    new Map({
-                        container: mapId,
-                        // ... other map options
-                    });
-                } catch (error) {
-                    console.warn(`Map initialization failed for ${mapId}:`, error);
-                }
+      function initializeMaps2() {
+        $('.map-container').each(function () {
+          const mapId = $(this).attr('id');
+          if (mapId && document.getElementById(mapId)) {
+            try {
+              new Map({
+                container: mapId
+                // ek map ayarları
+              });
+            } catch (error) {
+              console.warn(`Map initialization failed for ${mapId}:`, error);
             }
+          }
         });
-    }
+      }
 
-    // Handle dynamic content updates
-    table.on('draw', function() {
-        initializeMaps();
+      table.on('draw', function () {
+        initializeMaps2();
+      });
     });
-});
 
-// Add this before your existing initializeMaps function
-
-$(document).ready(function() {
-    try {
-        // Ensure table has proper structure
+    // thead otomatik ekleme (ihtiyaç varsa)
+    $(document).ready(function () {
+      try {
         if (!$('table thead').length) {
-            console.warn('Table missing thead, adding default structure');
-            $('table').prepend('<thead><tr></tr></thead>');
+          console.warn('Table missing thead, adding default structure');
+          $('table').prepend('<thead><tr></tr></thead>');
 
-            // Add headers if none exist
-            const columnCount = $('table tr:first td').length;
-            for (let i = 0; i < columnCount; i++) {
-                $('table thead tr').append('<th></th>');
-            }
+          const columnCount = $('table tr:first td').length;
+          for (let i = 0; i < columnCount; i++) {
+            $('table thead tr').append('<th></th>');
+          }
         }
 
-        // Initialize DataTable with options
-        const table = $('table').DataTable({
-            pageLength: 10,
-            responsive: true,
-            ordering: true,
-            searching: true,
-            columnDefs: [{
-                targets: '_all',
-                defaultContent: ''
-            }],
-            language: {
-                emptyTable: 'No data available'
+        $('table').DataTable({
+          pageLength: 10,
+          responsive: true,
+          ordering: true,
+          searching: true,
+          columnDefs: [
+            {
+              targets: '_all',
+              defaultContent: ''
             }
+          ],
+          language: {
+            emptyTable: 'No data available'
+          }
         });
-    } catch (error) {
+      } catch (error) {
         console.error('DataTable initialization error:', error);
-    }
-});
+      }
+    });
 
-// ...existing code...
-</script>
-
-<!-- Add this JavaScript -->
-<script>
-function showImageInModal(imageUrl) {
-    const modalImage = document.getElementById('modalImage');
-    if (modalImage) {
+    // Resim modal'ı için fonksiyon
+    function showImageInModal(imageUrl) {
+      const modalImage = document.getElementById('modalImage');
+      if (modalImage) {
         modalImage.src = imageUrl;
+      }
     }
-}
-
-// Initialize all Bootstrap modals
-document.addEventListener('DOMContentLoaded', function() {
-    var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-});
-</script>
+  </script>
 {% endblock page_js %}
 
 {% block content %}
-
-
-<!-- Add this after your first card sections, before the existing for loop -->
+<!-- Kart yapısı -->
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
   <div class="card-datatable table-responsive">
-    <!-- Add filter controls -->
+    <!-- Filtre kontrolleri -->
     <div class="row mb-3 px-4 pt-2">
       <div class="col-md-3">
-        <input type="text" id="searchBox" class="form-control" placeholder="Ara...">
+        <input type="text" id="searchBox" class="form-control" placeholder="Ara..." />
       </div>
       <div class="col-md-3">
         <select class="form-select" id="neighborhoodSelect">
@@ -341,14 +327,13 @@ document.addEventListener('DOMContentLoaded', function() {
           <option value="Esatpaşa">Esatpaşa</option>
           <option value="Fetih">Fetih</option>
           <option value="İçerenköy">İçerenköy</option>
-          <!-- Add more neighborhoods as needed -->
+          <!-- Gerekirse diğer mahalleleri ekleyin -->
         </select>
       </div>
       <div class="col-md-6">
-        <!-- Existing filters -->
         <div class="d-flex align-items-center">
           <div class="form-check me-3">
-            <input class="form-check-input" type="checkbox" id="showAllFrames">
+            <input class="form-check-input" type="checkbox" id="showAllFrames" />
             <label class="form-check-label" for="showAllFrames">Tüm Frame'ler</label>
           </div>
           <select class="form-select" id="detectionType" style="width: 200px;">
@@ -359,79 +344,37 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
     </div>
-    <!-- Existing table -->
-    <table class="datatables-basic table border-top" id="streamImagesTable">
+
+    <!-- DataTable: 9 sütun (Expand + ID + Görüntü + Tarih + İşlendi + Adres + Cihaz ID + Tespit Türü + Doğruluk) -->
+    <table
+      id="streamImagesTable"
+      class="table"
+      data-toggle="table"
+      data-pagination="true"
+      data-search="true"
+      data-show-columns="true"
+      data-show-export="true"
+      data-page-size="10"
+      data-page-list="[10, 25, 50, 100]"
+      data-locale="tr-TR">
       <thead>
         <tr>
-          <th></th>
-          <th>ID</th>
-          <th>Görüntü</th>
-          <th>Tarih</th>
-          <th>İşlendi</th>
-          <th>Adres</th>
-          <th>Cihaz ID</th>
+          <th data-field="expand" data-formatter="expandFormatter"></th>
+          <th data-field="id" data-sortable="true">ID</th>
+          <th data-field="image" data-formatter="imageFormatter">Görüntü</th>
+          <th data-field="timestamp" data-sortable="true">Tarih</th>
+          <th data-field="processed">İşlendi</th>
+          <th data-field="fulladdress">Adres</th>
+          <th data-field="deviceuuid">Cihaz ID</th>
+          <th data-field="class_name">Tespit Türü</th>
+          <th data-field="confidence">Doğruluk</th>
         </tr>
       </thead>
-      <tbody>
-        {% for image in stream_images %}
-        <tr class="parent-row">
-          <td>
-            <button class="btn btn-sm btn-icon btn-expand" data-bs-toggle="collapse"
-                    data-bs-target="#detections-{{image.id}}" aria-expanded="false">
-              <i class="ti ti-chevron-right"></i>
-            </button>
-          </td>
-          <td>{{ image.id }}</td>
-          <td>
-            <img src="https://atasehir.algi.ai{{ image.image.url }}"
-                 width="50" height="50"
-                 class="cursor-pointer"
-                 data-bs-toggle="modal"
-                 data-bs-target="#imageModal"
-                 onclick="showImageInModal(this.src)">
-          </td>
-          <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
-          <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
-          <td>{{ image.fulladdress }}</td>
-          <td>{{ image.deviceuuid }}</td>
-        </tr>
-        <tr class="collapse" id="detections-{{image.id}}">
-          <td colspan="7">
-            <div class="p-3">
-              <h6 class="mb-3">Tespitler</h6>
-              <table class="table mb-0">
-                <thead>
-                  <tr>
-                    <th>Tespit Türü</th>
-                    <th>Doğruluk</th>
-                    <th>Tespit Zamanı</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for detection in image.detections.all %}
-                  <tr>
-                    <td>{{ detection.class_name }}</td>
-                    <td>
-                      <div class="progress" style="height: 6px;">
-                        <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
-                      </div>
-                      {{ detection.confidence|floatformat:2 }}
-                    </td>
-                    <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
     </table>
   </div>
 </div>
 
-<!-- Add modal structure -->
+<!-- Modal: Detay -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -442,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="modal-body">
         <div class="row">
           <div class="col-md-6">
-            <img id="modalImage" src="" class="img-fluid rounded mb-3" alt="Detection Image">
+            <img id="modalImage" src="" class="img-fluid rounded mb-3" alt="Detection Image" />
           </div>
           <div class="col-md-6">
             <div id="modalMap" style="height: 300px;" class="mb-3"></div>
@@ -451,11 +394,26 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="row">
           <div class="col-12">
             <table class="table">
-              <tr><td>ID:</td><td id="modalId"></td></tr>
-              <tr><td>Tarih:</td><td id="modalDate"></td></tr>
-              <tr><td>Adres:</td><td id="modalAddress"></td></tr>
-              <tr><td>Cihaz ID:</td><td id="modalDevice"></td></tr>
-              <tr><td>Tespit Türü:</td><td id="modalDetection"></td></tr>
+              <tr>
+                <td>ID:</td>
+                <td id="modalId"></td>
+              </tr>
+              <tr>
+                <td>Tarih:</td>
+                <td id="modalDate"></td>
+              </tr>
+              <tr>
+                <td>Adres:</td>
+                <td id="modalAddress"></td>
+              </tr>
+              <tr>
+                <td>Cihaz ID:</td>
+                <td id="modalDevice"></td>
+              </tr>
+              <tr>
+                <td>Tespit Türü:</td>
+                <td id="modalDetection"></td>
+              </tr>
             </table>
           </div>
         </div>
@@ -464,26 +422,26 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- Add this modal structure to bottom of body -->
+<!-- Modal: Resim Büyütme -->
 <div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" class="img-fluid">
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" class="img-fluid" />
+      </div>
     </div>
+  </div>
 </div>
 
 <style>
-.btn-expand i {
-  transition: transform 0.2s;
-}
-.parent-row {
-  background-color: #f8f9fa;
-}
+  .btn-expand i {
+    transition: transform 0.2s;
+  }
+  .parent-row {
+    background-color: #f8f9fa;
+  }
 </style>
-{% endblock %}
+{% endblock content %}
