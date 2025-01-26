@@ -1,60 +1,37 @@
-{% extends layout_path %}
-
-{% load static %}
-{% load i18n %}
-{% load stream_filters %}
-
-{% block title %}Detaylı Rapor{% endblock %}
-
-{% block vendor_css %}
-{{ block.super }}
+{% extends layout_path %} {% load static %} {% load i18n %} {% load stream_filters %} {% block vendor_css %} {{ block.super }}
 <link rel="stylesheet" href="{% static 'vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-{% endblock vendor_css %}
-
-{% block vendor_js %}
-{{ block.super }}
+{% endblock %} {% block vendor_js %} {{ block.super }}
 <script src="{% static 'vendor/libs/moment/moment.js' %}"></script>
 <script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-{% endblock vendor_js %}
-
-{% block page_css %}
-{{ block.super }}
+{% endblock %} {% block page_css %} {{ block.super }}
 <link rel="stylesheet" href="{% static 'vendor/css/pages/app-ecommerce.css' %}" />
-{% endblock page_css %}
-
-{% block head %}
-{{ block.super }}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-{% endblock head %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
   <div class="card-datatable table-responssive">
     <div class="row mb-3 px-4 pt-2">
       <div class="col-md-3">
-        <input type="text" id="searchBox" class="form-control" placeholder="Ara...">
+        <input type="text" id="searchBox" class="form-control" placeholder="Ara..." />
       </div>
 
       <div class="col-md-6">
-        <!-- Existing filters -->
         <div class="d-flex align-items-center">
           <div class="form-check me-3">
-            <input class="form-check-input" type="checkbox" id="showAllFrames">
+            <input class="form-check-input" type="checkbox" id="showAllFrames" />
             <label class="form-check-label" for="showAllFrames">Tüm Frame'ler</label>
           </div>
-          <select class="form-select" id="detectionType" style="width: 200px;">
+          <select class="form-select" id="detectionType" style="width: 200px">
             <option value="">Tespit Türü Seçin</option>
             <option value="cukur">Çukur</option>
             <option value="catlak">Çatlak</option>
@@ -62,7 +39,7 @@
         </div>
       </div>
     </div>
-    <!-- Existing table -->
+
     <table class="datatables-basic table border-top" id="streamImagesTable">
       <thead>
         <tr>
@@ -79,54 +56,25 @@
         {% for image in stream_images %}
         <tr class="parent-row">
           <td>
-            <button class="btn btn-sm btn-icon btn-expand" data-bs-toggle="collapse"
-                    data-bs-target="#detections-{{image.id}}" aria-expanded="false">
+            <button class="btn btn-sm btn-icon btn-expand" data-bs-toggle="collapse" data-bs-target="#detections-{{ image.id }}" aria-expanded="false">
               <i class="ti ti-chevron-right"></i>
             </button>
           </td>
           <td>{{ image.id }}</td>
           <td>
             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal-{{ image.id }}">
-              <img src="https://atasehir.algi.ai{{ image.image.url }}" width="120" class="cursor-pointer">
+              <img src="https://atasehir.algi.ai{{ image.image.url }}" width="120" class="cursor-pointer" />
             </a>
             <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ image.id }}" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content">
-                  <canvas id="canvas-{{ image.id }}"></canvas>
-                  <script>
-                    var canvas = new fabric.Canvas('canvas-{{ image.id }}');
-                    var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
-
-                    fabric.Image.fromURL(imageUrl, function(img) {
-                      canvas.setWidth(img.width);
-                      canvas.setHeight(img.height);
-                      canvas.add(img);
-
-                      {% for detection in image.detections.all %}
-                        // Add square for detection point
-                        var rect = new fabric.Rect({
-                          left: {{ detection.x_coord }},
-                          top: {{ detection.y_coord }},
-                          width: 10,
-                          height: 10,
-                          fill: 'red',
-                          opacity: 0.5
-                        });
-
-                        // Add text label
-                        var text = new fabric.Text('{{ detection.class_name }}', {
-                          left: {{ detection.x_coord }},
-                          top: {{ detection.y_coord }} - 15,
-                          fontSize: 12,
-                          fill: 'red',
-                          fontFamily: 'Arial'
-                        });
-
-                        canvas.add(rect);
-                        canvas.add(text);
-                      {% endfor %}
-                    });
-                  </script>
+                  <div class="modal-header">
+                    <h5 class="modal-title">Görüntü #{{ image.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-0">
+                    <canvas id="canvas-{{ image.id }}"></canvas>
+                  </div>
                 </div>
               </div>
             </div>
@@ -136,7 +84,7 @@
           <td>{{ image.fulladdress }}</td>
           <td>{{ image.deviceuuid }}</td>
         </tr>
-        <tr class="collapse" id="detections-{{image.id}}">
+        <tr class="collapse" id="detections-{{ image.id }}">
           <td colspan="7">
             <div class="p-3">
               <h6 class="mb-3">Tespitler</h6>
@@ -153,7 +101,7 @@
                   <tr>
                     <td>{{ detection.class_name }}</td>
                     <td>
-                      <div class="progress" style="height: 6px;">
+                      <div class="progress" style="height: 6px">
                         <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
                       </div>
                       {{ detection.confidence|floatformat:2 }}
@@ -172,110 +120,102 @@
   </div>
 </div>
 
-<!-- Add modal structure -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Tespit Detayları</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row">
-          <div class="col-md-6">
-            <img id="modalImage" src="" class="img-fluid rounded mb-3" alt="Detection Image">
-          </div>
-          <div class="col-md-6">
-            <div id="modalMap" style="height: 300px;" class="mb-3"></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-12">
-            <table class="table">
-              <tr><td>ID:</td><td id="modalId"></td></tr>
-              <tr><td>Tarih:</td><td id="modalDate"></td></tr>
-              <tr><td>Adres:</td><td id="modalAddress"></td></tr>
-              <tr><td>Cihaz ID:</td><td id="modalDevice"></td></tr>
-              <tr><td>Tespit Türü:</td><td id="modalDetection"></td></tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Add this modal structure to bottom of body -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" class="img-fluid">
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
 .btn-expand i {
   transition: transform 0.2s;
 }
+
 </style>
 
-<div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Görüntü #{{ image.id }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-0">
-        <canvas id="canvas-{{ image.id }}"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('imageModal-{{ image.id }}');
-  modal.addEventListener('shown.bs.modal', function() {
-    var canvas = new fabric.Canvas('canvas-{{ image.id }}');
-    var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+window.addEventListener('load', function() {
+  {
+    %
+    for image in stream_images %
+  }
+  (function(imageId) {
+    const modal = document.getElementById('imageModal-' + imageId);
+    if (modal) {
+      modal.addEventListener('shown.bs.modal', function() {
+        var canvas = new fabric.Canvas('canvas-' + imageId);
+        var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
 
-    fabric.Image.fromURL(imageUrl, function(img) {
-      canvas.setWidth(img.width);
-      canvas.setHeight(img.height);
-      canvas.add(img);
+        fabric.Image.fromURL(imageUrl, function(img) {
+          canvas.setWidth(img.width);
+          canvas.setHeight(img.height);
+          canvas.add(img);
 
-      {% for detection in image.detections.all %}
-        var rect = new fabric.Rect({
-          left: {{ detection.x_min }},
-          top: {{ detection.y_min }},
-          width: {{ detection.x_max }} - {{ detection.x_min }},
-          height: {{ detection.y_max }} - {{ detection.y_min }},
-          fill: 'transparent',
-          stroke: 'red',
-          strokeWidth: 2
+          {
+            %
+            for detection in image.detections.all %
+          }
+          var rect = new fabric.Rect({
+            left: {
+              {
+                detection.x_min
+              }
+            },
+            top: {
+              {
+                detection.y_min
+              }
+            },
+            width: {
+              {
+                detection.x_max
+              }
+            } - {
+              {
+                detection.x_min
+              }
+            },
+            height: {
+              {
+                detection.y_max
+              }
+            } - {
+              {
+                detection.y_min
+              }
+            },
+            fill: 'transparent',
+            stroke: 'red',
+            strokeWidth: 2
+          });
+
+          var text = new fabric.Text('{{ detection.class_name }}', {
+            left: {
+              {
+                detection.x_min
+              }
+            },
+            top: {
+              {
+                detection.y_min
+              }
+            } - 15,
+            fontSize: 12,
+            fill: 'red',
+            fontFamily: 'Arial'
+          });
+
+          canvas.add(rect);
+          canvas.add(text); {
+            %
+            endfor %
+          }
         });
-
-        var text = new fabric.Text('{{ detection.class_name }}', {
-          left: {{ detection.x_min }},
-          top: {{ detection.y_min }} - 15,
-          fontSize: 12,
-          fill: 'red',
-          fontFamily: 'Arial'
-        });
-
-        canvas.add(rect);
-        canvas.add(text);
-      {% endfor %}
-    });
-  });
+      });
+    }
+  })({
+    {
+      image.id
+    }
+  }); {
+    %
+    endfor %
+  }
 });
-</script>
 
-{% endblock content %}
+</script>
+{% endblock %}

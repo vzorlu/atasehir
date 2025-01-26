@@ -44,7 +44,7 @@
     "editor.defaultFormatter": "HookyQR.beautify"
   },
   "[django-html]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "apility.beautify-blade"
   },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
