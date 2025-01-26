@@ -138,7 +138,7 @@ window.addEventListener('load', function() {
     if (modal) {
       modal.addEventListener('shown.bs.modal', function() {
         var canvas = new fabric.Canvas('canvas-' + imageId);
-        var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+        var imageUrl = "https://atasehir.algi.ai{{ image.image.url|escapejs }}";
 
         fabric.Image.fromURL(imageUrl, function(img) {
           canvas.setWidth(img.width);
@@ -183,7 +183,7 @@ window.addEventListener('load', function() {
             strokeWidth: 2
           });
 
-          var text = new fabric.Text('{{ detection.class_name }}', {
+          var text = new fabric.Text('{{ detection.class_name|escapejs }}', {
             left: {
               {
                 detection.x_min
