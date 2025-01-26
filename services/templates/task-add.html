@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="{% static 'vendor/libs/select2/select2.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/bs-stepper/bs-stepper.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
+<!-- Add Rete.js CSS -->
+<link rel="stylesheet" href="{% static 'vendor/libs/retejs/style.css' %}" />
 {% endblock vendor_css %}
 
 
@@ -22,6 +24,10 @@
 <script src="{% static 'vendor/libs/rateyo/rateyo.js' %}"></script>
 <script src="{% static 'vendor/libs/cleavejs/cleave.js' %}"></script>
 <script src="{% static 'vendor/libs/cleavejs/cleave-phone.js' %}"></script>
+<!-- Add Rete.js and its dependencies -->
+<script src="{% static 'vendor/libs/retejs/rete.min.js' %}"></script>
+<script src="{% static 'vendor/libs/retejs/rete-connection-plugin.min.js' %}"></script>
+<script src="{% static 'vendor/libs/retejs/rete-area-plugin.min.js' %}"></script>
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -394,11 +400,76 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-</script>
+// Rete.js initialization
+async function initRete() {
+    const container = document.querySelector('#rete');
+    const editor = new Rete.NodeEditor('demo@1.0.0', container);
+    const engine = new Rete.Engine('demo@1.0.0');
 
+    // Add connection plugin
+    const connectionPlugin = new Rete.ConnectionPlugin();
+    editor.use(connectionPlugin);
+
+    // Add area plugin
+    const areaPlugin = new Rete.AreaPlugin();
+    editor.use(areaPlugin);
+
+    // Example component
+    class NumComponent extends Rete.Component {
+        constructor() {
+            super("Number");
+        }
+
+        builder(node) {
+            const out = new Rete.Output('num', "Number", numSocket);
+            const ctrl = new Rete.Control('number');
+
+            return node.addControl(ctrl).addOutput(out);
+        }
+    }
+
+    // Register component
+    editor.register(new NumComponent());
+
+    // Add initial nodes
+    const n1 = await components[0].createNode({num: 2});
+    const n2 = await components[0].createNode({num: 3});
+
+    n1.position = [80, 200];
+    n2.position = [320, 200];
+
+    editor.addNode(n1);
+    editor.addNode(n2);
+
+    editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
+        await engine.abort();
+        await engine.process(editor.toJSON());
+    });
+}
+
+// Initialize Rete.js when document is ready
+document.addEventListener('DOMContentLoaded', () => {
+    initRete().catch(console.error);
+});
+</script>
 {% endblock page_js %}
 
 {% block content %}
+<!-- Add this container for Rete.js editor -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Flow Editor</h5>
+      </div>
+      <div class="card-body">
+        <div id="rete" style="width: 100%; height: 600px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Your existing content -->
 <div class="row g-6">
   <div class="col-lg-4">
     <div class="me-1">
