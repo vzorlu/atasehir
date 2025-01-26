@@ -9,7 +9,12 @@ from apps.notification.models import Notification
 
 @register.filter
 def get_item(dictionary, key):
-    return dictionary.get(key)
+    if dictionary is None:
+        return None
+    try:
+        return dictionary.get(key)
+    except AttributeError:
+        return None
 
 
 class CouncilView(TemplateView):
