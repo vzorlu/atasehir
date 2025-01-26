@@ -107,20 +107,19 @@
                       canvas.add(img);
 
                       {% for detection in image.detections.all %}
-                        // Add square for detection point
                         var rect = new fabric.Rect({
-                          left: {{ detection.x_coord }},
-                          top: {{ detection.y_coord }},
-                          width: 10,
-                          height: 10,
-                          fill: 'red',
-                          opacity: 0.5
+                          left: {{ detection.x_min }},
+                          top: {{ detection.y_min }},
+                          width: {{ detection.x_max }} - {{ detection.x_min }},
+                          height: {{ detection.y_max }} - {{ detection.y_min }},
+                          fill: 'transparent',
+                          stroke: 'red',
+                          strokeWidth: 2
                         });
 
-                        // Add text label
                         var text = new fabric.Text('{{ detection.class_name }}', {
-                          left: {{ detection.x_coord }},
-                          top: {{ detection.y_coord }} - 15,
+                          left: {{ detection.x_min }},
+                          top: {{ detection.y_min }} - 15,
                           fontSize: 12,
                           fill: 'red',
                           fontFamily: 'Arial'
