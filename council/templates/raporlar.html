@@ -35,12 +35,13 @@
 
 {% block head %}
 {{ block.super }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 {% endblock head %}
 
 {% block content %}
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
-  <div class="card-datatable table-responsive">
+  <div class="card-datatable table-responssive">
     <div class="row mb-3 px-4 pt-2">
       <div class="col-md-3">
         <input type="text" id="searchBox" class="form-control" placeholder="Ara...">
@@ -223,4 +224,58 @@
   transition: transform 0.2s;
 }
 </style>
-{% endblock %}
+
+<div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Görüntü #{{ image.id }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <canvas id="canvas-{{ image.id }}"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('imageModal-{{ image.id }}');
+  modal.addEventListener('shown.bs.modal', function() {
+    var canvas = new fabric.Canvas('canvas-{{ image.id }}');
+    var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+
+    fabric.Image.fromURL(imageUrl, function(img) {
+      canvas.setWidth(img.width);
+      canvas.setHeight(img.height);
+      canvas.add(img);
+
+      {% for detection in image.detections.all %}
+        var rect = new fabric.Rect({
+          left: {{ detection.x_min }},
+          top: {{ detection.y_min }},
+          width: {{ detection.x_max }} - {{ detection.x_min }},
+          height: {{ detection.y_max }} - {{ detection.y_min }},
+          fill: 'transparent',
+          stroke: 'red',
+          strokeWidth: 2
+        });
+
+        var text = new fabric.Text('{{ detection.class_name }}', {
+          left: {{ detection.x_min }},
+          top: {{ detection.y_min }} - 15,
+          fontSize: 12,
+          fill: 'red',
+          fontFamily: 'Arial'
+        });
+
+        canvas.add(rect);
+        canvas.add(text);
+      {% endfor %}
+    });
+  });
+});
+</script>
+
+{% endblock content %}
