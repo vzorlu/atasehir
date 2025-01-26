@@ -108,7 +108,7 @@
 
                       {% for detection in image.detections.all %}
                         // Add circle for detection point
-                        var circle = new fabric.Circle({
+                        var circle = new fabric.Canvas({
                           left: {{ detection.x_coord }},
                           top: {{ detection.y_coord }},
                           radius: 3,

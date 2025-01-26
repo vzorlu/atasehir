@@ -13,7 +13,6 @@ class CouncilView(TemplateView):
 
         # Get images with detections, including all required fields
         images_with_detections = StreamImage.objects.all().order_by("-timestamp")
-        print("0101010-", images_with_detections)
         context["stream_images"] = images_with_detections
         context["google_maps_api_key"] = settings.GOOGLE_MAPS_API_KEY
         return context
