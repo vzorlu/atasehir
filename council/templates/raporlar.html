@@ -163,6 +163,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<script>
+document.querySelectorAll('.view-notification, .add-notification').forEach(button => {
+    button.addEventListener('click', function() {
+        const detectionId = this.getAttribute('data-detection-id');
+        const className = this.getAttribute('data-class-name');
+
+        document.getElementById('detectionId').value = detectionId;
+        document.getElementById('classField').value = className;
+
+        if (this.classList.contains('view-notification')) {
+            document.querySelector('select[name="type"]').value = this.getAttribute('data-notification-type');
+            document.querySelector('input[name="title"]').value = this.getAttribute('data-notification-title');
+            document.querySelector('textarea[name="message"]').value = this.getAttribute('data-notification-message');
+            document.querySelector('select[name="department"]').value = this.getAttribute('data-notification-department');
+        }
+
+        new bootstrap.Modal(document.getElementById('addNotificationModal')).show();
+    });
+});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -282,18 +302,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                     <td>
                       {% if detection.notification %}
-                          <a href="{% url 'admin:notification_notification_change' detection.notification.id %}"
-                             class="btn btn-sm btn-primary">
-                              <i class="fas fa-bell"></i> View Notification
-                          </a>
-                      {% else %}
-                          <button type="button"
-                                  class="btn btn-sm btn-outline-primary add-notification"
-                                  data-detection-id="{{ detection.id }}"
-                                  data-class-name="{{ detection.class_name }}">
-                              <i class="fas fa-plus"></i> Add Notification
-                          </button>
-                      {% endif %}
+    <button type="button"
+            class="btn btn-sm btn-outline-primary view-notification"
+            data-detection-id="{{ detection.id }}"
+            data-class-name="{{ detection.class_name }}"
+            data-notification-id="{{ detection.notification.id }}"
+            data-notification-type="{{ detection.notification.type }}"
+            data-notification-title="{{ detection.notification.title }}"
+            data-notification-message="{{ detection.notification.message }}"
+            data-notification-department="{{ detection.notification.department.id }}">
+        <i class="fas fa-bell"></i> Bildirimi Görüntüle
+    </button>
+{% else %}
+    <button type="button"
+            class="btn btn-sm btn-outline-primary add-notification"
+            data-detection-id="{{ detection.id }}"
+            data-class-name="{{ detection.class_name }}">
+        <i class="fas fa-plus"></i> Bildirim Ekle
+    </button>
+{% endif %}
                     </td>
                   </tr>
                   {% endfor %}
