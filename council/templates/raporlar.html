@@ -102,6 +102,39 @@ function drawDetection(canvas, detection, scale) {
     canvas.add(text);
 }
 </script>
+<!-- Add this to your JavaScript section -->
+<script>
+document.querySelectorAll('.add-notification').forEach(button => {
+    button.addEventListener('click', function() {
+        const detectionId = this.getAttribute('data-detection-id');
+        const className = this.getAttribute('data-class-name');
+
+        document.getElementById('detectionId').value = detectionId;
+        document.getElementById('classField').value = className;
+
+        new bootstrap.Modal(document.getElementById('addNotificationModal')).show();
+    });
+});
+
+document.getElementById('saveNotification').addEventListener('click', function() {
+    const form = document.getElementById('notificationForm');
+    const formData = new FormData(form);
+
+    fetch('/api/notifications/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+});
+</script>
 {% endblock %}
 
 {% block content %}
@@ -206,7 +239,7 @@ function drawDetection(canvas, detection, scale) {
                   <tr>
                     <th>Tespit Türü</th>
                     <th>Doğruluk</th>
-                    <th>Tespit Zamanı</th>
+                    <th>Bildirim</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -219,7 +252,21 @@ function drawDetection(canvas, detection, scale) {
                       </div>
                       {{ detection.confidence|floatformat:2 }}
                     </td>
-                    <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td>
+                      {% if detection.notification %}
+                          <a href="{% url 'admin:notification_notification_change' detection.notification.id %}"
+                             class="btn btn-sm btn-primary">
+                              <i class="fas fa-bell"></i> View Notification
+                          </a>
+                      {% else %}
+                          <button type="button"
+                                  class="btn btn-sm btn-outline-primary add-notification"
+                                  data-detection-id="{{ detection.id }}"
+                                  data-class-name="{{ detection.class_name }}">
+                              <i class="fas fa-plus"></i> Add Notification
+                          </button>
+                      {% endif %}
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -232,6 +279,110 @@ function drawDetection(canvas, detection, scale) {
     </table>
   </div>
 </div>
+
+<!-- Add this near the end of the body tag -->
+<div class="modal fade" id="addNotificationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bildirim Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notificationForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="detectionId" name="detection_id">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Bildirim Türü</label>
+                            <select class="form-select" name="type" required>
+                                <option value="INFO">Bilgi</option>
+                                <option value="WARNING">Uyarı</option>
+                                <option value="ERROR">Hata</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Departman</label>
+                            <select class="form-select" name="department">
+                                <option value="">Departman Seçiniz</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Başlık</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mesaj</label>
+                        <textarea class="form-control" name="message" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tespit Sınıfı</label>
+                        <input type="text" class="form-control" name="class_field" id="classField" readonly>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            Bildirim Ayarları
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="channels[]" value="email">
+                                <label class="form-check-label">E-posta</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="channels[]" value="sms">
+                                <label class="form-check-label">SMS</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="channels[]" value="whatsapp">
+                                <label class="form-check-label">WhatsApp</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-primary" id="saveNotification">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('saveNotification').addEventListener('click', function() {
+    const form = document.getElementById('notificationForm');
+    const formData = new FormData(form);
+
+    fetch('/api/notifications/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error creating notification: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the notification');
+    });
+});
+</script>
 
 <style>
 .btn-expand i {
