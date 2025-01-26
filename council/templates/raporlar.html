@@ -107,14 +107,26 @@
                       canvas.add(img);
 
                       {% for detection in image.detections.all %}
+                        // Add circle for detection point
                         var circle = new fabric.Circle({
                           left: {{ detection.x_coord }},
                           top: {{ detection.y_coord }},
-                          radius: 10,
+                          radius: 3,
                           fill: 'red',
-                          opacity: 0.5
+                          opacity: 1
                         });
+
+                        // Add text label
+                        var text = new fabric.Text('{{ detection.class_name }}', {
+                          left: {{ detection.x_coord }},
+                          top: {{ detection.y_coord }} - 15,
+                          fontSize: 12,
+                          fill: 'red',
+                          fontFamily: 'Arial'
+                        });
+
                         canvas.add(circle);
+                        canvas.add(text);
                       {% endfor %}
                     });
                   </script>
