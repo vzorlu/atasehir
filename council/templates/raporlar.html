@@ -92,44 +92,49 @@
             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal-{{ image.id }}">
               <img src="https://atasehir.algi.ai{{ image.image.url }}" width="120" class="cursor-pointer">
             </a>
-            <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ image.id }}" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
+            <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1">
+              <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                  <canvas id="canvas-{{ image.id }}"></canvas>
-                  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
-                  <script>
-                    var canvas = new fabric.Canvas('canvas-{{ image.id }}');
-                    var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
+                  <div class="modal-header">
+                    <h5 class="modal-title">Görüntü #{{ image.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body text-center p-0">
+                    <canvas id="canvas-{{ image.id }}"></canvas>
+                    <script>
+                      var canvas = new fabric.Canvas('canvas-{{ image.id }}');
+                      var imageUrl = "https://atasehir.algi.ai{{ image.image.url }}";
 
-                    fabric.Image.fromURL(imageUrl, function(img) {
-                      canvas.setWidth(img.width);
-                      canvas.setHeight(img.height);
-                      canvas.add(img);
+                      fabric.Image.fromURL(imageUrl, function(img) {
+                        canvas.setWidth(img.width);
+                        canvas.setHeight(img.height);
+                        canvas.add(img);
 
-                      {% for detection in image.detections.all %}
-                        var rect = new fabric.Rect({
-                          left: {{ detection.x_min }},
-                          top: {{ detection.y_min }},
-                          width: {{ detection.x_max }} - {{ detection.x_min }},
-                          height: {{ detection.y_max }} - {{ detection.y_min }},
-                          fill: 'transparent',
-                          stroke: 'red',
-                          strokeWidth: 2
-                        });
+                        {% for detection in image.detections.all %}
+                          var rect = new fabric.Rect({
+                            left: {{ detection.x_min }},
+                            top: {{ detection.y_min }},
+                            width: {{ detection.x_max }} - {{ detection.x_min }},
+                            height: {{ detection.y_max }} - {{ detection.y_min }},
+                            fill: 'transparent',
+                            stroke: 'red',
+                            strokeWidth: 2
+                          });
 
-                        var text = new fabric.Text('{{ detection.class_name }}', {
-                          left: {{ detection.x_min }},
-                          top: {{ detection.y_min }} - 15,
-                          fontSize: 12,
-                          fill: 'red',
-                          fontFamily: 'Arial'
-                        });
+                          var text = new fabric.Text('{{ detection.class_name }}', {
+                            left: {{ detection.x_min }},
+                            top: {{ detection.y_min }} - 15,
+                            fontSize: 12,
+                            fill: 'red',
+                            fontFamily: 'Arial'
+                          });
 
-                        canvas.add(rect);
-                        canvas.add(text);
-                      {% endfor %}
-                    });
-                  </script>
+                          canvas.add(rect);
+                          canvas.add(text);
+                        {% endfor %}
+                      });
+                    </script>
+                  </div>
                 </div>
               </div>
             </div>
