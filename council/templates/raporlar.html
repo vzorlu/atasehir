@@ -1,12 +1,14 @@
-{% extends layout_path %} {% load static %} {% load i18n %} {% load stream_filters %} {% block vendor_css %} {{ block.super }}
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/libs/rateyo/rateyo.css' %}" />
+{% extends layout_path %}
+{% load static %}
+{% load i18n %}
+{% load stream_filters %}
+{% block vendor_css %}
+{{ block.super }}
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-{% endblock %} {% block vendor_js %} {{ block.super }}
+{% endblock %}
+{% block vendor_js %}
+{{ block.super }}
 <script src="{% static 'vendor/libs/moment/moment.js' %}"></script>
 <script src="{% static 'vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
 <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
@@ -127,95 +129,4 @@
 
 </style>
 
-<script>
-window.addEventListener('load', function() {
-  {
-    %
-    for image in stream_images %
-  }
-  (function(imageId) {
-    const modal = document.getElementById('imageModal-' + imageId);
-    if (modal) {
-      modal.addEventListener('shown.bs.modal', function() {
-        var canvas = new fabric.Canvas('canvas-' + imageId);
-        var imageUrl = "https://atasehir.algi.ai{{ image.image.url|escapejs }}";
-
-        fabric.Image.fromURL(imageUrl, function(img) {
-          canvas.setWidth(img.width);
-          canvas.setHeight(img.height);
-          canvas.add(img);
-
-          {
-            %
-            for detection in image.detections.all %
-          }
-          var rect = new fabric.Rect({
-            left: {
-              {
-                detection.x_min
-              }
-            },
-            top: {
-              {
-                detection.y_min
-              }
-            },
-            width: {
-              {
-                detection.x_max
-              }
-            } - {
-              {
-                detection.x_min
-              }
-            },
-            height: {
-              {
-                detection.y_max
-              }
-            } - {
-              {
-                detection.y_min
-              }
-            },
-            fill: 'transparent',
-            stroke: 'red',
-            strokeWidth: 2
-          });
-
-          var text = new fabric.Text('{{ detection.class_name|escapejs }}', {
-            left: {
-              {
-                detection.x_min
-              }
-            },
-            top: {
-              {
-                detection.y_min
-              }
-            } - 15,
-            fontSize: 12,
-            fill: 'red',
-            fontFamily: 'Arial'
-          });
-
-          canvas.add(rect);
-          canvas.add(text); {
-            %
-            endfor %
-          }
-        });
-      });
-    }
-  })({
-    {
-      image.id
-    }
-  }); {
-    %
-    endfor %
-  }
-});
-
-</script>
 {% endblock %}
