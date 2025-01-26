@@ -158,28 +158,27 @@
   window.addEventListener('DOMContentLoaded', function() {
     streamImagesData.forEach(function(imageData) {
       const modal = document.getElementById('imageModal-' + imageData.id);
-      let canvasInstance; // Canvas referansını saklamak için
+      let canvasInstance;
 
       if (modal) {
-        // [3] Modal açıldığında canvasInstance oluşturuyoruz
+        // shown.bs.modal -> Modal tamamen açıldığı anda
         modal.addEventListener('shown.bs.modal', function() {
           canvasInstance = new fabric.Canvas('canvas-' + imageData.id);
 
+          // Resim yüklendikten sonra canvas boyutunu ayarla
           fabric.Image.fromURL(imageData.imageUrl, function(img) {
             const modalBody = modal.querySelector('.modal-body');
             const modalWidth = modalBody.clientWidth;
             const scale = modalWidth / img.width;
 
-            // Canvas boyutlarını ayarla
             canvasInstance.setWidth(img.width * scale);
             canvasInstance.setHeight(img.height * scale);
 
-            // Ölçeklendir ve ortala
             img.scale(scale);
             canvasInstance.add(img);
             canvasInstance.centerObject(img);
 
-            // Tespitleri çiz
+            // Tespit bölgelerini dikdörtgen olarak çiziyoruz
             imageData.detections.forEach(function(detection) {
               const rect = new fabric.Rect({
                 left: detection.x_min * scale,
@@ -191,7 +190,6 @@
                 strokeWidth: 2,
                 selectable: false
               });
-
               const text = new fabric.Text(detection.className, {
                 left: detection.x_min * scale,
                 top: (detection.y_min * scale) - 15,
@@ -209,7 +207,7 @@
           });
         });
 
-        // [4] Modal kapandığında canvasInstance bellekten temizleniyor
+        // [B2] Modal kapanınca Canvas bellekten temizlenir
         modal.addEventListener('hidden.bs.modal', function() {
           if (canvasInstance) {
             canvasInstance.dispose();
