@@ -3,6 +3,13 @@ from stream.models import StreamImage
 from web_project import TemplateLayout
 from django.conf import settings
 from django.shortcuts import render
+from django.template.defaulttags import register
+from apps.notification.models import Notification
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 
 class CouncilView(TemplateView):
@@ -15,6 +22,18 @@ class CouncilView(TemplateView):
         images_with_detections = StreamImage.objects.all().order_by("-timestamp")
         context["stream_images"] = images_with_detections
         context["google_maps_api_key"] = settings.GOOGLE_MAPS_API_KEY
+
+        notification_rules = {
+            notification.class_field: {
+                "type": notification.type,
+                "title": notification.title,
+                "message": notification.message,
+                "department": notification.department_id,
+            }
+            for notification in Notification.objects.all()
+        }
+        context["notification_rules"] = notification_rules
+
         return context
 
 

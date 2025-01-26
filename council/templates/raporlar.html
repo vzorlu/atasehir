@@ -239,7 +239,6 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
           <th>ID</th>
           <th>Görüntü</th>
           <th>Tarih</th>
-          <th>İşlendi</th>
           <th>Adres</th>
           <th>Cihaz ID</th>
         </tr>
@@ -301,16 +300,15 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
                       {{ detection.confidence|floatformat:2 }}
                     </td>
                     <td>
-                      {% if detection.notification %}
+                      {% if detection.notification or notification_rules|get_item:detection.class_name %}
     <button type="button"
             class="btn btn-sm btn-outline-primary view-notification"
             data-detection-id="{{ detection.id }}"
             data-class-name="{{ detection.class_name }}"
-            data-notification-id="{{ detection.notification.id }}"
-            data-notification-type="{{ detection.notification.type }}"
-            data-notification-title="{{ detection.notification.title }}"
-            data-notification-message="{{ detection.notification.message }}"
-            data-notification-department="{{ detection.notification.department.id }}">
+            data-notification-type="{{ notification_rules|get_item:detection.class_name|get_item:'type' }}"
+            data-notification-title="{{ notification_rules|get_item:detection.class_name|get_item:'title' }}"
+            data-notification-message="{{ notification_rules|get_item:detection.class_name|get_item:'message' }}"
+            data-notification-department="{{ notification_rules|get_item:detection.class_name|get_item:'department' }}">
         <i class="fas fa-bell"></i> Bildirimi Görüntüle
     </button>
 {% else %}
