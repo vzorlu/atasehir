@@ -75,7 +75,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                   </div>
                   <div class="modal-body p-0">
-                    <canvas id="canvas-{{ image.id }}"></canvas>
+                    <div class="canvas-container" style="width: 100%; height: 100%; position: relative;">
+                      <canvas id="canvas-{{ image.id }}" style="width: 100%; height: auto;"></canvas>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -128,5 +130,128 @@
 }
 
 </style>
+
+<script>
+const streamImagesData = [{
+  %
+  for image in stream_images %
+} {
+  id: {
+    {
+      image.id
+    }
+  },
+  imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
+  detections: [{
+    %
+    for detection in image.detections.all %
+  } {
+    x_min: {
+      {
+        detection.x_min
+      }
+    },
+    y_min: {
+      {
+        detection.y_min
+      }
+    },
+    x_max: {
+      {
+        detection.x_max
+      }
+    },
+    y_max: {
+      {
+        detection.y_max
+      }
+    },
+    className: "{{ detection.class_name|escapejs }}"
+  } {
+    %
+    if not forloop.last %
+  }, {
+    %
+    endif %
+  } {
+    %
+    endfor %
+  }]
+} {
+  %
+  if not forloop.last %
+}, {
+  %
+  endif %
+} {
+  %
+  endfor %
+}];
+
+window.addEventListener('load', function() {
+  streamImagesData.forEach(function(imageData) {
+    const modal = document.getElementById('imageModal-' + imageData.id);
+    if (modal) {
+      modal.addEventListener('shown.bs.modal', function() {
+        // Create a new canvas instance
+        var canvas = new fabric.Canvas('canvas-' + imageData.id);
+
+        // Load the image
+        fabric.Image.fromURL(imageData.imageUrl, function(img) {
+          // Calculate the scaling to fit the modal
+          const modalWidth = modal.querySelector('.modal-body').clientWidth;
+          const scale = modalWidth / img.width;
+
+          // Set canvas dimensions
+          canvas.setWidth(img.width * scale);
+          canvas.setHeight(img.height * scale);
+
+          // Scale the image
+          img.scale(scale);
+
+          // Center the image
+          canvas.add(img);
+          canvas.centerObject(img);
+
+          // Add detections with scaled coordinates
+          imageData.detections.forEach(function(detection) {
+            var rect = new fabric.Rect({
+              left: detection.x_min * scale,
+              top: detection.y_min * scale,
+              width: (detection.x_max - detection.x_min) * scale,
+              height: (detection.y_max - detection.y_min) * scale,
+              fill: 'transparent',
+              stroke: 'red',
+              strokeWidth: 2,
+              selectable: false
+            });
+
+            var text = new fabric.Text(detection.className, {
+              left: detection.x_min * scale,
+              top: (detection.y_min * scale) - 15,
+              fontSize: 12 * scale,
+              fill: 'red',
+              fontFamily: 'Arial',
+              selectable: false
+            });
+
+            canvas.add(rect);
+            canvas.add(text);
+          });
+
+          canvas.renderAll();
+        });
+      });
+
+      // Clean up canvas when modal is hidden
+      modal.addEventListener('hidden.bs.modal', function() {
+        var canvas = new fabric.Canvas('canvas-' + imageData.id);
+        canvas.dispose();
+      });
+    }
+  });
+});
+
+</script>
 
 {% endblock %}
