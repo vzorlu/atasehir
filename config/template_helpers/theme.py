@@ -1,5 +1,4 @@
 from django.conf import settings
-from pprint import pprint
 import os
 from importlib import import_module, util
 
@@ -16,21 +15,15 @@ class TemplateHelper:
                 "rtl_support": settings.TEMPLATE_CONFIG.get("rtl_support"),
                 "rtl_mode": settings.TEMPLATE_CONFIG.get("rtl_mode"),
                 "has_customizer": settings.TEMPLATE_CONFIG.get("has_customizer"),
-                "display_customizer": settings.TEMPLATE_CONFIG.get(
-                    "display_customizer"
-                ),
+                "display_customizer": settings.TEMPLATE_CONFIG.get("display_customizer"),
                 "content_layout": settings.TEMPLATE_CONFIG.get("content_layout"),
                 "navbar_type": settings.TEMPLATE_CONFIG.get("navbar_type"),
                 "header_type": settings.TEMPLATE_CONFIG.get("header_type"),
                 "menu_fixed": settings.TEMPLATE_CONFIG.get("menu_fixed"),
                 "menu_collapsed": settings.TEMPLATE_CONFIG.get("menu_collapsed"),
                 "footer_fixed": settings.TEMPLATE_CONFIG.get("footer_fixed"),
-                "show_dropdown_onhover": settings.TEMPLATE_CONFIG.get(
-                    "show_dropdown_onhover"
-                ),
-                "customizer_controls": settings.TEMPLATE_CONFIG.get(
-                    "customizer_controls"
-                ),
+                "show_dropdown_onhover": settings.TEMPLATE_CONFIG.get("show_dropdown_onhover"),
+                "customizer_controls": settings.TEMPLATE_CONFIG.get("customizer_controls"),
             }
         )
         return context
@@ -60,9 +53,7 @@ class TemplateHelper:
             context["navbar_type_class"] = ""
 
         # Menu collapsed
-        context["menu_collapsed_class"] = (
-            "layout-menu-collapsed" if context.get("menu_collapsed") else ""
-        )
+        context["menu_collapsed_class"] = "layout-menu-collapsed" if context.get("menu_collapsed") else ""
 
         #! Menu Fixed (vertical support only)
         if context.get("layout") == "vertical":
@@ -72,9 +63,7 @@ class TemplateHelper:
                 context["menu_fixed_class"] = ""
 
         # Footer Fixed
-        context["footer_fixed_class"] = (
-            "layout-footer-fixed" if context.get("footer_fixed") else ""
-        )
+        context["footer_fixed_class"] = "layout-footer-fixed" if context.get("footer_fixed") else ""
 
         # RTL Supported template
         context["rtl_support_value"] = "/rtl" if context.get("rtl_support") else ""
@@ -85,14 +74,10 @@ class TemplateHelper:
         )
 
         #!  Show dropdown on hover (Horizontal menu)
-        context["show_dropdown_onhover_value"] = (
-            "true" if context.get("show_dropdown_onhover") else "false"
-        )
+        context["show_dropdown_onhover_value"] = "true" if context.get("show_dropdown_onhover") else "false"
 
         # Display Customizer
-        context["display_customizer_class"] = (
-            "" if context.get("display_customizer") else "customizer-hide"
-        )
+        context["display_customizer_class"] = "" if context.get("display_customizer") else "customizer-hide"
 
         # Content Layout
         if context.get("content_layout") == "wide":
@@ -134,15 +119,12 @@ class TemplateHelper:
         else:
             module = f"templates.{settings.THEME_LAYOUT_DIR.replace('/', '.')}.bootstrap.default"
 
-            TemplateBootstrap = TemplateHelper.import_class(
-                module, "TemplateBootstrapDefault"
-            )
+            TemplateBootstrap = TemplateHelper.import_class(module, "TemplateBootstrapDefault")
             TemplateBootstrap.init(context)
 
         return f"{settings.THEME_LAYOUT_DIR}/{view}"
 
     # Import a module by string
     def import_class(fromModule, import_className):
-        pprint(f"Loading {import_className} from {fromModule}")
         module = import_module(fromModule)
         return getattr(module, import_className)
