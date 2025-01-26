@@ -26,7 +26,6 @@
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-
 {% endblock vendor_js %}
 
 {% block page_css %}
@@ -36,14 +35,12 @@
 
 {% block head %}
 {{ block.super }}
+{% endblock head %}
+
 {% block content %}
-
-
-<!-- Add this after your first card sections, before the existing for loop -->
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
   <div class="card-datatable table-responsive">
-    <!-- Add filter controls -->
     <div class="row mb-3 px-4 pt-2">
       <div class="col-md-3">
         <input type="text" id="searchBox" class="form-control" placeholder="Ara...">
