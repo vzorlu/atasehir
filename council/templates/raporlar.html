@@ -21,47 +21,104 @@
 {% endblock %} {% block content %}
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
-  <div class="card-datatable table-responsive">
+  <div class="card-datatable table-responssive">
     <div class="row mb-3 px-4 pt-2">
-      <!-- Search Box -->
       <div class="col-md-3">
         <input type="text" id="searchBox" class="form-control" placeholder="Ara..." />
       </div>
 
-      <!-- Filters -->
-      <div class="col-md-9">
+      <div class="col-md-6">
         <div class="d-flex align-items-center">
           <div class="form-check me-3">
             <input class="form-check-input" type="checkbox" id="showAllFrames" />
             <label class="form-check-label" for="showAllFrames">Tüm Frame'ler</label>
           </div>
-          <select class="form-select me-3" id="detectionType" style="width: 200px">
+          <select class="form-select" id="detectionType" style="width: 200px">
             <option value="">Tespit Türü Seçin</option>
-            <option value="person">İnsan</option>
-            <option value="vehicle">Araç</option>
-            <option value="animal">Hayvan</option>
-            <option value="object">Nesne</option>
+            <option value="cukur">Çukur</option>
+            <option value="catlak">Çatlak</option>
           </select>
-          <input type="date" class="form-control me-2" id="startDate" style="width: 150px">
-          <input type="date" class="form-control" id="endDate" style="width: 150px">
         </div>
       </div>
     </div>
 
-    <!-- Results Table -->
-    <table class="table" id="detectionsTable">
+    <table class="datatables-basic table border-top" id="streamImagesTable">
       <thead>
         <tr>
+          <th></th>
           <th>ID</th>
+          <th>Görüntü</th>
           <th>Tarih</th>
-          <th>Tespit Türü</th>
-          <th>Kamera</th>
-          <th>Frame</th>
-          <th>İşlemler</th>
+          <th>İşlendi</th>
+          <th>Adres</th>
+          <th>Cihaz ID</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Table content will be populated dynamically -->
+        {% for image in stream_images %}
+        <tr class="parent-row">
+          <td>
+            <button class="btn btn-sm btn-icon btn-expand" data-bs-toggle="collapse" data-bs-target="#detections-{{ image.id }}" aria-expanded="false">
+              <i class="ti ti-chevron-right"></i>
+            </button>
+          </td>
+          <td>{{ image.id }}</td>
+          <td>
+            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal-{{ image.id }}">
+              <img src="https://atasehir.algi.ai{{ image.image.url }}" width="120" class="cursor-pointer" />
+            </a>
+            <div class="modal fade" id="imageModal-{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel-{{ image.id }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-xl">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Görüntü #{{ image.id }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body p-0">
+                    <div class="canvas-container" style="width: 100%; height: 100%; position: relative;">
+                      <canvas id="canvas-{{ image.id }}" style="width: 100%; height: auto;"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>{{ image.timestamp|date:"d.m.Y H:i:s" }}</td>
+          <td>{{ image.processed|yesno:"Evet,Hayır" }}</td>
+          <td>{{ image.fulladdress }}</td>
+          <td>{{ image.deviceuuid }}</td>
+        </tr>
+        <tr class="collapse" id="detections-{{ image.id }}">
+          <td colspan="7">
+            <div class="p-3">
+              <h6 class="mb-3">Tespitler</h6>
+              <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th>Tespit Türü</th>
+                    <th>Doğruluk</th>
+                    <th>Tespit Zamanı</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for detection in image.detections.all %}
+                  <tr>
+                    <td>{{ detection.class_name }}</td>
+                    <td>
+                      <div class="progress" style="height: 6px">
+                        <div class="progress-bar" style="width: {{ detection.confidence|multiply:100 }}%"></div>
+                      </div>
+                      {{ detection.confidence|floatformat:2 }}
+                    </td>
+                    <td>{{ detection.timestamp|date:"Y-m-d H:i:s" }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
@@ -75,144 +132,94 @@
 </style>
 
 <script>
-const streamImagesData = [{
-  %
-  for image in stream_images %
-} {
-  id: {
-    {
-      image.id
-    }
-  },
-  imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
-  detections: [{
-    %
-    for detection in image.detections.all %
-  } {
-    x_min: {
+  // [1] streamImagesData yapısındaki Jinja döngüsünü düzeltildi
+  const streamImagesData = [
+  {% for image in stream_images %}
+  {
+    id: {{ image.id }},
+    imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
+    detections: [
+      {% for detection in image.detections.all %}
       {
-        detection.x_min
-      }
-    },
-    y_min: {
-      {
-        detection.y_min
-      }
-    },
-    x_max: {
-      {
-        detection.x_max
-      }
-    },
-    y_max: {
-      {
-        detection.y_max
-      }
-    },
-    className: "{{ detection.class_name|escapejs }}"
-  } {
-    %
-    if not forloop.last %
-  }, {
-    %
-    endif %
-  } {
-    %
-    endfor %
-  }]
-} {
-  %
-  if not forloop.last %
-}, {
-  %
-  endif %
-} {
-  %
-  endfor %
-}];
+        x_min: {{ detection.x_min }},
+        y_min: {{ detection.y_min }},
+        x_max: {{ detection.x_max }},
+        y_max: {{ detection.y_max }},
+        className: "{{ detection.class_name|escapejs }}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
 
-window.addEventListener('load', function() {
-  streamImagesData.forEach(function(imageData) {
-    const modal = document.getElementById('imageModal-' + imageData.id);
-    if (modal) {
-      modal.addEventListener('shown.bs.modal', function() {
-        // Create a new canvas instance
-        var canvas = new fabric.Canvas('canvas-' + imageData.id);
+  // [2] "DOMContentLoaded" yerine "load" veya tam tersi kullanılabilir.
+  //     İkisinden biri yeterli. (Gereksiz kısımlar kaldırıldı)
+  window.addEventListener('DOMContentLoaded', function() {
+    streamImagesData.forEach(function(imageData) {
+      const modal = document.getElementById('imageModal-' + imageData.id);
+      let canvasInstance; // Canvas referansını saklamak için
 
-        // Load the image
-        fabric.Image.fromURL(imageData.imageUrl, function(img) {
-          // Calculate the scaling to fit the modal
-          const modalWidth = modal.querySelector('.modal-body').clientWidth;
-          const scale = modalWidth / img.width;
+      if (modal) {
+        // [3] Modal açıldığında canvasInstance oluşturuyoruz
+        modal.addEventListener('shown.bs.modal', function() {
+          canvasInstance = new fabric.Canvas('canvas-' + imageData.id);
 
-          // Set canvas dimensions
-          canvas.setWidth(img.width * scale);
-          canvas.setHeight(img.height * scale);
+          fabric.Image.fromURL(imageData.imageUrl, function(img) {
+            const modalBody = modal.querySelector('.modal-body');
+            const modalWidth = modalBody.clientWidth;
+            const scale = modalWidth / img.width;
 
-          // Scale the image
-          img.scale(scale);
+            // Canvas boyutlarını ayarla
+            canvasInstance.setWidth(img.width * scale);
+            canvasInstance.setHeight(img.height * scale);
 
-          // Center the image
-          canvas.add(img);
-          canvas.centerObject(img);
+            // Ölçeklendir ve ortala
+            img.scale(scale);
+            canvasInstance.add(img);
+            canvasInstance.centerObject(img);
 
-          // Add detections with scaled coordinates
-          imageData.detections.forEach(function(detection) {
-            var rect = new fabric.Rect({
-              left: detection.x_min * scale,
-              top: detection.y_min * scale,
-              width: (detection.x_max - detection.x_min) * scale,
-              height: (detection.y_max - detection.y_min) * scale,
-              fill: 'transparent',
-              stroke: 'red',
-              strokeWidth: 2,
-              selectable: false
+            // Tespitleri çiz
+            imageData.detections.forEach(function(detection) {
+              const rect = new fabric.Rect({
+                left: detection.x_min * scale,
+                top: detection.y_min * scale,
+                width: (detection.x_max - detection.x_min) * scale,
+                height: (detection.y_max - detection.y_min) * scale,
+                fill: 'transparent',
+                stroke: 'red',
+                strokeWidth: 2,
+                selectable: false
+              });
+
+              const text = new fabric.Text(detection.className, {
+                left: detection.x_min * scale,
+                top: (detection.y_min * scale) - 15,
+                fontSize: 12 * scale,
+                fill: 'red',
+                fontFamily: 'Arial',
+                selectable: false
+              });
+
+              canvasInstance.add(rect);
+              canvasInstance.add(text);
             });
 
-            var text = new fabric.Text(detection.className, {
-              left: detection.x_min * scale,
-              top: (detection.y_min * scale) - 15,
-              fontSize: 12 * scale,
-              fill: 'red',
-              fontFamily: 'Arial',
-              selectable: false
-            });
-
-            canvas.add(rect);
-            canvas.add(text);
+            canvasInstance.renderAll();
           });
-
-          canvas.renderAll();
         });
-      });
 
-      // Clean up canvas when modal is hidden
-      modal.addEventListener('hidden.bs.modal', function() {
-        var canvas = new fabric.Canvas('canvas-' + imageData.id);
-        canvas.dispose();
-      });
-    }
+        // [4] Modal kapandığında canvasInstance bellekten temizleniyor
+        modal.addEventListener('hidden.bs.modal', function() {
+          if (canvasInstance) {
+            canvasInstance.dispose();
+            canvasInstance = null;
+          }
+        });
+      }
+    });
   });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const searchBox = document.getElementById('searchBox');
-  const detectionType = document.getElementById('detectionType');
-  const showAllFrames = document.getElementById('showAllFrames');
-  const startDate = document.getElementById('startDate');
-  const endDate = document.getElementById('endDate');
-
-  function updateResults() {
-    // Add logic to fetch and update results based on filters
-  }
-
-  searchBox.addEventListener('input', updateResults);
-  detectionType.addEventListener('change', updateResults);
-  showAllFrames.addEventListener('change', updateResults);
-  startDate.addEventListener('change', updateResults);
-  endDate.addEventListener('change', updateResults);
-});
-
 </script>
+
 
 {% endblock %}
