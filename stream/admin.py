@@ -1,18 +1,16 @@
 from django.contrib import admin
-from .models import StreamImage, Detection
+from .models import Detection, StreamImage
 
-@admin.register(StreamImage)
-class StreamImageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'image', 'timestamp', 'processed', 'lang', 'long', 'deviceuuid')
-    list_filter = ('processed', 'timestamp')
-    search_fields = ('deviceuuid',)
-    readonly_fields = ('timestamp', 'deviceuuid')
-    ordering = ('-timestamp',)
 
 @admin.register(Detection)
 class DetectionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'image', 'class_name', 'x_coord', 'y_coord', 'confidence', 'timestamp')
-    list_filter = ('class_name', 'timestamp')
-    search_fields = ('class_name', 'image__id')
-    readonly_fields = ('timestamp',)
-    ordering = ('-timestamp',)
+    list_display = ("id", "image", "class_name", "x_min", "y_min", "x_max", "y_max", "confidence", "timestamp")
+    list_filter = ("class_name", "timestamp")
+    search_fields = ("class_name", "image__id")
+    ordering = ("-timestamp",)
+
+
+@admin.register(StreamImage)
+class StreamImageAdmin(admin.ModelAdmin):
+    list_display = ("id", "image", "timestamp")
+    ordering = ("-timestamp",)

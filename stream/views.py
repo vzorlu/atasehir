@@ -96,8 +96,10 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                 Detection.objects.create(
                     image=stream_image,
                     class_name=results[0].names[int(cls)],
-                    x_coord=float(x1),
-                    y_coord=float(y1),
+                    x_min=float(x1),
+                    y_min=float(y1),
+                    x_max=float(x2),
+                    y_max=float(y2),
                     confidence=float(conf),
                 )
 

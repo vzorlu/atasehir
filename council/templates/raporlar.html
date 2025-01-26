@@ -18,7 +18,116 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 {% endblock %} {% block page_css %} {{ block.super }}
 <link rel="stylesheet" href="{% static 'vendor/css/pages/app-ecommerce.css' %}" />
-{% endblock %} {% block content %}
+{% endblock %}
+
+{% block page_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get data from HTML
+    const streamDataElement = document.getElementById('stream-data');
+    const streamImagesData = JSON.parse(streamDataElement.dataset.images);
+
+    // Process data
+    streamImagesData.forEach(function(imageData) {
+        // Create table rows
+        const tbody = document.querySelector('#detectionsTable tbody');
+        const row = `
+            <tr>
+                <td>${imageData.id}</td>
+                <td>${new Date().toLocaleDateString()}</td>
+                <td>${imageData.detections[0]?.className || 'N/A'}</td>
+                <td>Camera ${imageData.id}</td>
+                <td>
+                    <button class="btn btn-primary btn-sm"
+                            onclick="showDetectionModal(${imageData.id})">
+                        Görüntüle
+                    </button>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+});
+
+function showDetectionModal(imageId) {
+    const imageData = JSON.parse(document.getElementById('stream-data').dataset.images)
+        .find(img => img.id === imageId);
+
+    if (imageData) {
+        const modal = new bootstrap.Modal(document.getElementById('detectionModal'));
+        initializeCanvas(imageData);
+        modal.show();
+    }
+}
+
+function initializeCanvas(imageData) {
+    const canvas = new fabric.Canvas('detectionCanvas');
+    canvasInstance = canvas;
+
+    fabric.Image.fromURL(imageData.imageUrl, function(img) {
+        const scale = Math.min(
+            canvas.width / img.width,
+            canvas.height / img.height
+        );
+
+        img.scale(scale);
+        canvas.add(img);
+        canvas.centerObject(img);
+
+        imageData.detections.forEach(function(detection) {
+            drawDetection(canvas, detection, scale);
+        });
+    });
+}
+
+function drawDetection(canvas, detection, scale) {
+    const rect = new fabric.Rect({
+        left: detection.x_min * scale,
+        top: detection.y_min * scale,
+        width: (detection.x_max - detection.x_min) * scale,
+        height: (detection.y_max - detection.y_min) * scale,
+        fill: 'transparent',
+        stroke: 'red',
+        strokeWidth: 2
+    });
+
+    const text = new fabric.Text(detection.className, {
+        left: detection.x_min * scale,
+        top: detection.y_min * scale - 20,
+        fill: 'red',
+        fontSize: 16
+    });
+
+    canvas.add(rect);
+    canvas.add(text);
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Data Container -->
+<div id="stream-data" style="display: none;"
+     data-images='[
+      {% for image in stream_images %}
+        {
+          "id": {{ image.id }},
+          "imageUrl": "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
+          "detections": [
+            {% for detection in image.detections.all %}
+              {
+                "x_min": {{ detection.x_min }},
+                "y_min": {{ detection.y_min }},
+                "x_max": {{ detection.x_max }},
+                "y_max": {{ detection.y_max }},
+                "className": "{{ detection.class_name|escapejs }}"
+              }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+     ]'>
+</div>
+
 <div class="card">
   <h5 class="card-header">Tespit Listesi</h5>
   <div class="card-datatable table-responssive">
@@ -134,51 +243,52 @@
 <script>
   // [1] streamImagesData yapısındaki Jinja döngüsünü düzeltildi
   const streamImagesData = [
-  {% for image in stream_images %}
-  {
-    id: {{ image.id }},
-    imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
-    detections: [
-      {% for detection in image.detections.all %}
-      {
-        x_min: {{ detection.x_min }},
-        y_min: {{ detection.y_min }},
-        x_max: {{ detection.x_max }},
-        y_max: {{ detection.y_max }},
-        className: "{{ detection.class_name|escapejs }}"
-      }{% if not forloop.last %},{% endif %}
-      {% endfor %}
-    ]
-  }{% if not forloop.last %},{% endif %}
-  {% endfor %}
-];
+    {% for image in stream_images %}
+    {
+      id: {{ image.id }},
+      imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
+      detections: [
+        {% for detection in image.detections.all %}
+        {
+          x_min: {{ detection.x_min }},
+          y_min: {{ detection.y_min }},
+          x_max: {{ detection.x_max }},
+          y_max: {{ detection.y_max }},
+          className: "{{ detection.class_name|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
 
   // [2] "DOMContentLoaded" yerine "load" veya tam tersi kullanılabilir.
   //     İkisinden biri yeterli. (Gereksiz kısımlar kaldırıldı)
   window.addEventListener('DOMContentLoaded', function() {
     streamImagesData.forEach(function(imageData) {
       const modal = document.getElementById('imageModal-' + imageData.id);
-      let canvasInstance;
+      let canvasInstance; // Canvas referansını saklamak için
 
       if (modal) {
-        // shown.bs.modal -> Modal tamamen açıldığı anda
+        // [3] Modal açıldığında canvasInstance oluşturuyoruz
         modal.addEventListener('shown.bs.modal', function() {
           canvasInstance = new fabric.Canvas('canvas-' + imageData.id);
 
-          // Resim yüklendikten sonra canvas boyutunu ayarla
           fabric.Image.fromURL(imageData.imageUrl, function(img) {
             const modalBody = modal.querySelector('.modal-body');
             const modalWidth = modalBody.clientWidth;
             const scale = modalWidth / img.width;
 
+            // Canvas boyutlarını ayarla
             canvasInstance.setWidth(img.width * scale);
             canvasInstance.setHeight(img.height * scale);
 
+            // Ölçeklendir ve ortala
             img.scale(scale);
             canvasInstance.add(img);
             canvasInstance.centerObject(img);
 
-            // Tespit bölgelerini dikdörtgen olarak çiziyoruz
+            // Tespitleri çiz
             imageData.detections.forEach(function(detection) {
               const rect = new fabric.Rect({
                 left: detection.x_min * scale,
@@ -190,6 +300,7 @@
                 strokeWidth: 2,
                 selectable: false
               });
+
               const text = new fabric.Text(detection.className, {
                 left: detection.x_min * scale,
                 top: (detection.y_min * scale) - 15,
@@ -207,7 +318,7 @@
           });
         });
 
-        // [B2] Modal kapanınca Canvas bellekten temizlenir
+        // [4] Modal kapandığında canvasInstance bellekten temizleniyor
         modal.addEventListener('hidden.bs.modal', function() {
           if (canvasInstance) {
             canvasInstance.dispose();

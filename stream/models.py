@@ -18,8 +18,10 @@ class StreamImage(models.Model):
 class Detection(models.Model):
     image = models.ForeignKey(StreamImage, related_name="detections", on_delete=models.CASCADE)
     class_name = models.CharField(max_length=100)
-    x_coord = models.FloatField()
-    y_coord = models.FloatField()
+    x_min = models.FloatField(default=0.0)
+    y_min = models.FloatField(default=0.0)
+    x_max = models.FloatField(default=0.0)
+    y_max = models.FloatField(default=0.0)
     confidence = models.FloatField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
