@@ -120,7 +120,7 @@ document.getElementById('saveNotification').addEventListener('click', function()
     const form = document.getElementById('notificationForm');
     const formData = new FormData(form);
 
-    fetch('/api/notifications/', {
+    fetch('/api/notifications/rule/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -130,8 +130,17 @@ document.getElementById('saveNotification').addEventListener('click', function()
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
+            modal.hide();
+            // Optional: Show success message
+            alert('Bildirim kuralı başarıyla oluşturuldu');
+        } else {
+            alert('Hata: ' + data.error);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Bildirim kuralı oluşturulurken bir hata oluştu');
     });
 });
 </script>
@@ -362,7 +371,7 @@ document.getElementById('saveNotification').addEventListener('click', function()
     const form = document.getElementById('notificationForm');
     const formData = new FormData(form);
 
-    fetch('/api/notifications/', {
+    fetch('/api/notifications/rule/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -372,14 +381,17 @@ document.getElementById('saveNotification').addEventListener('click', function()
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
+            modal.hide();
+            // Optional: Show success message
+            alert('Bildirim kuralı başarıyla oluşturuldu');
         } else {
-            alert('Error creating notification: ' + data.error);
+            alert('Hata: ' + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while saving the notification');
+        alert('Bildirim kuralı oluşturulurken bir hata oluştu');
     });
 });
 </script>
