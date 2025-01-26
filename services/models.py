@@ -7,6 +7,7 @@ import tempfile
 import os
 from django.core.files.base import ContentFile
 
+
 # Model for managing uploaded AI models
 class Models(models.Model):
     TYPE_CHOICES = [
@@ -16,9 +17,9 @@ class Models(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to='models/')  # File upload field
+    file = models.FileField(upload_to="models/")  # File upload field
     type = models.CharField(max_length=50, choices=TYPE_CHOICES)
-    sample_image = models.ImageField(upload_to='images/', blank=True, null=True)
+    sample_image = models.ImageField(upload_to="images/", blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     class_item = models.JSONField(blank=True, null=True)  # JSON field to store class items
 
@@ -41,6 +42,7 @@ class Models(models.Model):
         else:
             super().save(*args, **kwargs)
 
+
 class Location(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
@@ -57,20 +59,19 @@ class Location(models.Model):
 class RulesList(models.Model):
     title = models.CharField(max_length=255)
     level = models.IntegerField()
-    icon = models.ImageField(upload_to='rules/icons/', blank=True, null=True)
+    icon = models.ImageField(upload_to="rules/icons/", blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    value  = models.CharField(max_length=255)
-
-
+    value = models.CharField(max_length=255)
 
     def __str__(self):
         return self.title
+
 
 # Model for services
 class Services(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    models = models.ManyToManyField(Models, blank=True, related_name='services')
+    models = models.ManyToManyField(Models, blank=True, related_name="services")
 
     def __str__(self):
         return self.name
@@ -78,31 +79,29 @@ class Services(models.Model):
 
 class Reports(models.Model):
     LEVEL_CHOICES = [
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High'),
+        ("LOW", "Low"),
+        ("MEDIUM", "Medium"),
+        ("HIGH", "High"),
     ]
 
     STATUS_CHOICES = [
-        ('OPEN', 'Open'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('CLOSED', 'Closed'),
+        ("OPEN", "Open"),
+        ("IN_PROGRESS", "In Progress"),
+        ("CLOSED", "Closed"),
     ]
 
     title = models.CharField(max_length=255)
     level = models.CharField(max_length=50, choices=LEVEL_CHOICES)
-    assigned_to = models.ManyToManyField(User, related_name='assigned_reports', blank=True)
-    departments = models.ManyToManyField(Department, related_name='reports', blank=True)
+    assigned_to = models.ManyToManyField(User, related_name="assigned_reports", blank=True)
+    departments = models.ManyToManyField(Department, related_name="reports", blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES)
-    status_changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='status_changed_reports')
-    sources = models.ForeignKey('Sources', on_delete=models.CASCADE, related_name='reports')
-    notifications = models.ForeignKey(
-        'notification.Notifications',
-        on_delete=models.CASCADE,
-        related_name='reports'
+    status_changed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="status_changed_reports"
     )
-    captured_image = models.ImageField(upload_to='reports/images/', null=True, blank=True)
-    video_clip = models.FileField(upload_to='reports/videos/', null=True, blank=True)
+    sources = models.ForeignKey("Sources", on_delete=models.CASCADE, related_name="reports")
+    notifications = models.ForeignKey("notification.Notification", on_delete=models.CASCADE, related_name="reports")
+    captured_image = models.ImageField(upload_to="reports/images/", null=True, blank=True)
+    video_clip = models.FileField(upload_to="reports/videos/", null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -111,34 +110,33 @@ class Reports(models.Model):
         if self.pk is not None:
             old_report = Reports.objects.get(pk=self.pk)
             if old_report.status != self.status:
-                self.status_changed_by = kwargs.pop('user', None)
+                self.status_changed_by = kwargs.pop("user", None)
         super().save(*args, **kwargs)
-
 
 
 # Model for video sources
 class Sources(models.Model):
     title = models.CharField(max_length=255)
     location = models.CharField(max_length=255, blank=True, null=True)
-    url = models.CharField(max_length=255, default='RTSP://')
+    url = models.CharField(max_length=255, default="RTSP://")
     type = models.CharField(max_length=255)
     addtype = models.CharField(max_length=255, blank=True, null=True)
     fps = models.IntegerField(blank=True, null=True)
-    image = models.ImageField(upload_to='images/', blank=True, null=True)
-    status = models.CharField(max_length=50, default='0', blank=True, null=True)
+    image = models.ImageField(upload_to="images/", blank=True, null=True)
+    status = models.CharField(max_length=50, default="0", blank=True, null=True)
     resolution = models.CharField(max_length=50, blank=True, null=True)
     width = models.IntegerField(blank=True, null=True)
     height = models.IntegerField(blank=True, null=True)
     is_mobile = models.BooleanField(default=False)
     is_record = models.BooleanField(default=False)
     record_folder = models.CharField(max_length=255, blank=True, null=True)
-    inlocation = models.ManyToManyField(Location, blank=True, related_name='sources')
+    inlocation = models.ManyToManyField(Location, blank=True, related_name="sources")
     codec = models.CharField(max_length=10, null=True, blank=True)
     total_frames = models.IntegerField(null=True, blank=True)
     polygons = models.JSONField(
         null=True,
         blank=True,
-        help_text="Store polygon data as list of objects: [{coordinates: [[x1,y1], [x2,y2],...], label: 'string', color: 'string', transition_lines: [[[x1,y1], [x2,y2]], ...], crossing_direction: ['left-to-right', ...]}]"
+        help_text="Store polygon data as list of objects: [{coordinates: [[x1,y1], [x2,y2],...], label: 'string', color: 'string', transition_lines: [[[x1,y1], [x2,y2]], ...], crossing_direction: ['left-to-right', ...]}]",
     )
 
     def __str__(self):
@@ -160,7 +158,7 @@ class Sources(models.Model):
         self.resolution = resolution
         self.width = width
         self.height = height
-        self.status = '1' if status else '0'
+        self.status = "1" if status else "0"
         self.codec = codec
         self.total_frames = total_frames
 
@@ -171,7 +169,6 @@ class Sources(models.Model):
             self.image = None
 
         super(Sources, self).save(*args, **kwargs)
-
 
 
 def get_video_properties(url):
@@ -193,7 +190,7 @@ def get_video_properties(url):
         return None, width, height, False, fps, None, codec, total_frames
 
     # Frame'i geçici bir dosyaya kaydet
-    temp_file = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
+    temp_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
     cv2.imwrite(temp_file.name, frame)
 
     return f"{width}x{height}", width, height, True, fps, temp_file, codec, total_frames
