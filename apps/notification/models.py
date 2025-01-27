@@ -50,8 +50,8 @@ class NotificationChannel(models.Model):
     name = models.CharField(max_length=20, choices=NOTIFICATION_TYPES.CHOICES)
 
     class Meta:
-        verbose_name = "Bildirim Kanalı"
-        verbose_name_plural = "Bildirim Kanalları"
+        verbose_name = "Notification Channel"
+        verbose_name_plural = "Notification Channels"
 
     def __str__(self):
         return self.get_name_display()
