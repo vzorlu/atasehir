@@ -10,8 +10,6 @@ from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 from django.db.models import Count, Exists, OuterRef
 from rest_framework.filters import OrderingFilter
-from apps.notification.models import Notification
-from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -95,17 +93,15 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             # Create Detection objects
             for r in results[0].boxes.data:
                 x1, y1, x2, y2, conf, cls = r.tolist()
-                self.process_detection(results, cls)
                 Detection.objects.create(
                     image=stream_image,
                     class_name=results[0].names[int(cls)],
-                    x_min=float(x1),
-                    y_min=float(y1),
-                    x_max=float(x2),
-                    y_max=float(y2),
+                    x_coord=float(x1),
+                    y_coord=float(y1),
                     confidence=float(conf),
                 )
 
+            logger.info("Step 5: YOLO detection completed")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -125,23 +121,6 @@ class StreamImageViewSet(viewsets.ModelViewSet):
         queryset = StreamImage.objects.annotate(detection_count=Count("detections")).filter(detection_count__gt=0)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-    def process_detection(self, results, cls):
-        detected_class = results[0].names[int(cls)]
-
-        # Check notification settings
-        notification = Notification.objects.filter(class_field=detected_class, enabled=True).first()
-
-        if notification:
-            # Trigger notification
-            notification.trigger_notification(detected_class)
-
-        # Create detection record
-        Detection.objects.create(
-            class_name=detected_class,
-            timestamp=timezone.now(),
-            # ...other fields...
-        )
 
 
 class DetectionViewSet(viewsets.ModelViewSet):
