@@ -102,26 +102,14 @@ function drawDetection(canvas, detection, scale) {
     canvas.add(text);
 }
 </script>
-<!-- Add this to your JavaScript section -->
 <script>
-document.querySelectorAll('.add-notification').forEach(button => {
-    button.addEventListener('click', function() {
-        const detectionId = this.getAttribute('data-detection-id');
-        const className = this.getAttribute('data-class-name');
 
-        document.getElementById('detectionId').value = detectionId;
-        document.getElementById('classField').value = className;
-
-        new bootstrap.Modal(document.getElementById('addNotificationModal')).show();
-    });
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     const notificationForm = document.getElementById('notificationForm');
     const saveButton = document.getElementById('saveNotification');
-    const modal = document.getElementById('addNotificationModal');
 
-    if (!notificationForm || !saveButton || !modal) {
+    if (!notificationForm || !saveButton) {
         console.error('Required elements not found');
         return;
     }
@@ -164,25 +152,286 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-document.querySelectorAll('.view-notification, .add-notification').forEach(button => {
-    button.addEventListener('click', function() {
-        const detectionId = this.getAttribute('data-detection-id');
-        const className = this.getAttribute('data-class-name');
+  // [1] streamImagesData yapısındaki Jinja döngüsünü düzeltildi
+  const streamImagesData = [
+    {% for image in stream_images %}
+    {
+      id: {{ image.id }},
+      imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
+      detections: [
+        {% for detection in image.detections.all %}
+        {
+          x_min: {{ detection.x_min }},
+          y_min: {{ detection.y_min }},
+          x_max: {{ detection.x_max }},
+          y_max: {{ detection.y_max }},
+          className: "{{ detection.class_name|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
 
-        document.getElementById('detectionId').value = detectionId;
-        document.getElementById('classField').value = className;
+  // [2] "DOMContentLoaded" yerine "load" veya tam tersi kullanılabilir.
+  //     İkisinden biri yeterli. (Gereksiz kısımlar kaldırıldı)
+  window.addEventListener('DOMContentLoaded', function() {
+    streamImagesData.forEach(function(imageData) {
+      const modal = document.getElementById('imageModal-' + imageData.id);
+      let canvasInstance; // Canvas referansını saklamak için
 
-        if (this.classList.contains('view-notification')) {
-            document.querySelector('select[name="type"]').value = this.getAttribute('data-notification-type');
-            document.querySelector('input[name="title"]').value = this.getAttribute('data-notification-title');
-            document.querySelector('textarea[name="message"]').value = this.getAttribute('data-notification-message');
-            document.querySelector('select[name="department"]').value = this.getAttribute('data-notification-department');
+      if (modal) {
+        // [3] Modal açıldığında canvasInstance oluşturuyoruz
+        modal.addEventListener('shown.bs.modal', function() {
+          canvasInstance = new fabric.Canvas('canvas-' + imageData.id);
+
+          fabric.Image.fromURL(imageData.imageUrl, function(img) {
+            const modalBody = modal.querySelector('.modal-body');
+            const modalWidth = modalBody.clientWidth;
+            const scale = modalWidth / img.width;
+
+            // Canvas boyutlarını ayarla
+            canvasInstance.setWidth(img.width * scale);
+            canvasInstance.setHeight(img.height * scale);
+
+            // Ölçeklendir ve ortala
+            img.scale(scale);
+            canvasInstance.add(img);
+            canvasInstance.centerObject(img);
+
+            // Tespitleri çiz
+            imageData.detections.forEach(function(detection) {
+              const rect = new fabric.Rect({
+                left: detection.x_min * scale,
+                top: detection.y_min * scale,
+                width: (detection.x_max - detection.x_min) * scale,
+                height: (detection.y_max - detection.y_min) * scale,
+                fill: 'transparent',
+                stroke: 'red',
+                strokeWidth: 2,
+                selectable: false
+              });
+
+              const text = new fabric.Text(detection.className, {
+                left: detection.x_min * scale,
+                top: (detection.y_min * scale) - 15,
+                fontSize: 12 * scale,
+                fill: 'red',
+                fontFamily: 'Arial',
+                selectable: false
+              });
+
+              canvasInstance.add(rect);
+              canvasInstance.add(text);
+            });
+
+            canvasInstance.renderAll();
+          });
+        });
+
+        // [4] Modal kapandığında canvasInstance bellekten temizleniyor
+        modal.addEventListener('hidden.bs.modal', function() {
+          if (canvasInstance) {
+            canvasInstance.dispose();
+            canvasInstance = null;
+          }
+        });
+      }
+    });
+  });
+</script>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bildirim Kuralı</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="notificationForm">
+          <input type="hidden" id="detectionId">
+          <input type="hidden" id="className">
+
+          <div class="mb-3">
+            <label class="form-label">Kural Adı</label>
+            <input type="text" class="form-control" id="ruleName" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Bildirim Türü</label>
+            <select class="form-select" id="notificationType" required>
+              {% for value, label in notification_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Bildirim Kanalları</label>
+            <select class="form-select" id="channels" multiple required>
+              <option value="SMS">SMS</option>
+              <option value="EMAIL">E-posta</option>
+              <option value="WHATSAPP">WhatsApp</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Başlık</label>
+            <input type="text" class="form-control" id="title" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Mesaj</label>
+            <textarea class="form-control" id="message" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Departman</label>
+            <select class="form-select" id="department">
+              <option value="">Departman Seçiniz</option>
+              {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Uyarı Düzeyi</label>
+            <select class="form-select" id="severity" required>
+              {% for value, label in severity_levels %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        <button type="button" class="btn btn-primary" id="saveNotification">Kaydet</button>
+        <button type="button" class="btn btn-warning" id="updateNotification" style="display:none;">Düzenle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="notificationModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bildirim Kuralı</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="notificationForm">
+          <input type="hidden" id="detectionId">
+          <input type="hidden" id="className">
+
+          <div class="mb-3">
+            <label class="form-label">Kural Adı</label>
+            <input type="text" class="form-control" id="ruleName" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Bildirim Türü</label>
+            <select class="form-select" id="notificationType" required>
+              {% for value, label in notification_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Bildirim Kanalları</label>
+            <select class="form-select" id="channels" multiple required>
+              <option value="SMS">SMS</option>
+              <option value="EMAIL">E-posta</option>
+              <option value="WHATSAPP">WhatsApp</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Başlık</label>
+            <input type="text" class="form-control" id="title" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Mesaj</label>
+            <textarea class="form-control" id="message" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Departman</label>
+            <select class="form-select" id="department">
+              <option value="">Departman Seçiniz</option>
+              {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Uyarı Düzeyi</label>
+            <select class="form-select" id="severity" required>
+              {% for value, label in severity_levels %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        <button type="button" class="btn btn-primary" id="saveNotification">Kaydet</button>
+        <button type="button" class="btn btn-warning" id="updateNotification" style="display:none;">Düzenle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('.view-notification, .add-notification').off('click').on('click', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+        const modal = $('#notificationModal');
+
+        // Reset form
+        $('#notificationForm')[0].reset();
+
+        // Set common values
+        $('#detectionId').val(btn.data('detection-id'));
+        $('#className').val(btn.data('class-name'));
+
+        // Show/hide buttons based on action
+        if (btn.hasClass('view-notification')) {
+            $('#saveNotification').hide();
+            $('#updateNotification').show();
+
+            // Safely get data attributes with defaults
+            $('#ruleName').val(btn.data('rule-name') || '');
+            $('#notificationType').val(btn.data('notification-type') || '');
+            $('#title').val(btn.data('notification-title') || '');
+            $('#message').val(btn.data('notification-message') || '');
+            $('#department').val(btn.data('notification-department') || '');
+            $('#severity').val(btn.data('severity') || '');
+
+            // Handle channels array safely
+            const channels = btn.data('channels');
+            if (channels) {
+                $('#channels').val(typeof channels === 'string' ? channels.split(',') : []);
+            }
+        } else {
+            $('#saveNotification').show();
+            $('#updateNotification').hide();
         }
 
-        new bootstrap.Modal(document.getElementById('addNotificationModal')).show();
+        modal.modal('show');
     });
 });
 </script>
+
 {% endblock %}
 
 {% block content %}
@@ -285,7 +534,9 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
                   <tr>
                     <th>Tespit Türü</th>
                     <th>Doğruluk</th>
-                    <th>Bildirim</th>
+                    <th>Kural Durumu</th>
+                    <th>Gönderim Türü</th>
+                    <th>Bildirim Durumu</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -308,17 +559,19 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
                                 data-notification-title="{{ notification_rules|get_item:detection.class_name|get_item:'title' }}"
                                 data-notification-message="{{ notification_rules|get_item:detection.class_name|get_item:'message' }}"
                                 data-notification-department="{{ notification_rules|get_item:detection.class_name|get_item:'department' }}">
-                            <i class="fas fa-bell"></i> Bildirimi Görüntüle
+                            <i class="fas fa-bell"></i> Kuralı Görüntüle
                         </button>
                       {% else %}
                         <button type="button"
                                 class="btn btn-sm btn-outline-primary add-notification"
                                 data-detection-id="{{ detection.id }}"
                                 data-class-name="{{ detection.class_name }}">
-                            <i class="fas fa-plus"></i> Bildirim Ekle
+                            <i class="fas fa-plus"></i> Kural Ekle
                         </button>
                       {% endif %}
                     </td>
+                    <th>Push notification</th>
+                    <td>Gönderildi</td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -332,209 +585,11 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
   </div>
 </div>
 
-<!-- Add this near the end of the body tag -->
-<div class="modal fade" id="addNotificationModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bildirim Ekle</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="notificationForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="detectionId" name="detection_id">
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Bildirim Türü</label>
-                            <select class="form-select" name="type" required>
-                                <option value="INFO">Bilgi</option>
-                                <option value="WARNING">Uyarı</option>
-                                <option value="ERROR">Hata</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Departman</label>
-                            <select class="form-select" name="department">
-                                <option value="">Departman Seçiniz</option>
-                                {% for dept in departments %}
-                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Başlık</label>
-                        <input type="text" class="form-control" name="title" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Mesaj</label>
-                        <textarea class="form-control" name="message" rows="3" required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Tespit Sınıfı</label>
-                        <input type="text" class="form-control" name="class_field" id="classField" readonly>
-                    </div>
-
-                    <div class="card mt-3">
-                        <div class="card-header">
-                            Bildirim Ayarları
-                        </div>
-                        <div class="card-body">
-                            <div class="form-check mb-2">
-                                <input type="checkbox" class="form-check-input" name="channels[]" value="email">
-                                <label class="form-check-label">E-posta</label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input type="checkbox" class="form-check-input" name="channels[]" value="sms">
-                                <label class="form-check-label">SMS</label>
-                            </div>
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="channels[]" value="whatsapp">
-                                <label class="form-check-label">WhatsApp</label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                <button type="button" class="btn btn-primary" id="saveNotification">Kaydet</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-document.getElementById('saveNotification').addEventListener('click', function() {
-    const form = document.getElementById('notificationForm');
-    const formData = new FormData(form);
-
-    fetch('/api/notifications/rule/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addNotificationModal'));
-            modal.hide();
-            // Optional: Show success message
-            alert('Bildirim kuralı başarıyla oluşturuldu');
-        } else {
-            alert('Hata: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Bildirim kuralı oluşturulurken bir hata oluştu');
-    });
-});
-</script>
-
 <style>
 .btn-expand i {
   transition: transform 0.2s;
 }
 
 </style>
-
-<script>
-  // [1] streamImagesData yapısındaki Jinja döngüsünü düzeltildi
-  const streamImagesData = [
-    {% for image in stream_images %}
-    {
-      id: {{ image.id }},
-      imageUrl: "https://atasehir.algi.ai{{ image.image.url|escapejs }}",
-      detections: [
-        {% for detection in image.detections.all %}
-        {
-          x_min: {{ detection.x_min }},
-          y_min: {{ detection.y_min }},
-          x_max: {{ detection.x_max }},
-          y_max: {{ detection.y_max }},
-          className: "{{ detection.class_name|escapejs }}"
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-      ]
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ];
-
-  // [2] "DOMContentLoaded" yerine "load" veya tam tersi kullanılabilir.
-  //     İkisinden biri yeterli. (Gereksiz kısımlar kaldırıldı)
-  window.addEventListener('DOMContentLoaded', function() {
-    streamImagesData.forEach(function(imageData) {
-      const modal = document.getElementById('imageModal-' + imageData.id);
-      let canvasInstance; // Canvas referansını saklamak için
-
-      if (modal) {
-        // [3] Modal açıldığında canvasInstance oluşturuyoruz
-        modal.addEventListener('shown.bs.modal', function() {
-          canvasInstance = new fabric.Canvas('canvas-' + imageData.id);
-
-          fabric.Image.fromURL(imageData.imageUrl, function(img) {
-            const modalBody = modal.querySelector('.modal-body');
-            const modalWidth = modalBody.clientWidth;
-            const scale = modalWidth / img.width;
-
-            // Canvas boyutlarını ayarla
-            canvasInstance.setWidth(img.width * scale);
-            canvasInstance.setHeight(img.height * scale);
-
-            // Ölçeklendir ve ortala
-            img.scale(scale);
-            canvasInstance.add(img);
-            canvasInstance.centerObject(img);
-
-            // Tespitleri çiz
-            imageData.detections.forEach(function(detection) {
-              const rect = new fabric.Rect({
-                left: detection.x_min * scale,
-                top: detection.y_min * scale,
-                width: (detection.x_max - detection.x_min) * scale,
-                height: (detection.y_max - detection.y_min) * scale,
-                fill: 'transparent',
-                stroke: 'red',
-                strokeWidth: 2,
-                selectable: false
-              });
-
-              const text = new fabric.Text(detection.className, {
-                left: detection.x_min * scale,
-                top: (detection.y_min * scale) - 15,
-                fontSize: 12 * scale,
-                fill: 'red',
-                fontFamily: 'Arial',
-                selectable: false
-              });
-
-              canvasInstance.add(rect);
-              canvasInstance.add(text);
-            });
-
-            canvasInstance.renderAll();
-          });
-        });
-
-        // [4] Modal kapandığında canvasInstance bellekten temizleniyor
-        modal.addEventListener('hidden.bs.modal', function() {
-          if (canvasInstance) {
-            canvasInstance.dispose();
-            canvasInstance = null;
-          }
-        });
-      }
-    });
-  });
-</script>
-
 
 {% endblock %}
