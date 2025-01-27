@@ -99,7 +99,9 @@ class Reports(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="status_changed_reports"
     )
     sources = models.ForeignKey("Sources", on_delete=models.CASCADE, related_name="reports")
-    notifications = models.ForeignKey("notification.Notification", on_delete=models.CASCADE, related_name="reports")
+    notification = models.ForeignKey(
+        "notification.Notification", on_delete=models.CASCADE, related_name="reports", null=True, blank=True
+    )
     captured_image = models.ImageField(upload_to="reports/images/", null=True, blank=True)
     video_clip = models.FileField(upload_to="reports/videos/", null=True, blank=True)
 

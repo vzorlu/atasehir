@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from council.models import Department
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 
 User = get_user_model()
 
@@ -77,18 +79,32 @@ class WhatsappSettings(NotificationSettings):
 
 
 class PushNotification(NotificationSettings):
+    notification = models.OneToOneField("Notification", on_delete=models.CASCADE, related_name="push_settings")
     app_key = models.CharField(max_length=255, verbose_name="Uygulama Anahtarı")
     app_secret = models.CharField(max_length=255, verbose_name="Uygulama Gizli Anahtarı")
-    device_token = models.TextField(
-        verbose_name="Cihaz Token", help_text="Push notification gönderilecek cihaz token'ı"
-    )
+    device_token = models.TextField(verbose_name="Cihaz Token")
+
+
+class NotificationChannel(models.Model):
+    name = models.CharField(max_length=20, choices=NOTIFICATION_TYPES.CHOICES)
 
     class Meta:
-        verbose_name = "Push Notification Ayarları"
-        verbose_name_plural = "Push Notification Ayarları"
+        verbose_name = "Bildirim Kanalı"
+        verbose_name_plural = "Bildirim Kanalları"
+
+    def __str__(self):
+        return self.get_name_display()
 
 
 class Notification(models.Model):
+    rule_name = models.CharField(
+        max_length=255,
+        default="Varsayılan Kural",
+        verbose_name="Kural Adı",
+    )
+    channels = models.ManyToManyField(
+        NotificationChannel, verbose_name="Bildirim Kanalları", help_text="Birden fazla kanal seçebilirsiniz"
+    )
     title = models.CharField(
         max_length=255,
         default="Varsayılan Kural",  # Add default value
@@ -116,4 +132,17 @@ class Notification(models.Model):
         return f"{self.type}: {self.rule_name}"  # Update str method to use rule_name
 
 
-#
+@receiver(m2m_changed, sender=Notification.channels.through)
+def create_channel_settings(sender, instance, action, pk_set, **kwargs):
+    if action == "post_add":
+        for channel_id in pk_set:
+            channel = NotificationChannel.objects.get(id=channel_id)
+
+            if channel.name == "MAIL":
+                MailSettings.objects.get_or_create(notification=instance)
+            elif channel.name == "SMS":
+                SmsSettings.objects.get_or_create(notification=instance)
+            elif channel.name == "WHATSAPP":
+                WhatsappSettings.objects.get_or_create(notification=instance)
+            elif channel.name == "PUSH":
+                PushNotification.objects.get_or_create(notification=instance)

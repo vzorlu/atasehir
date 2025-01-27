@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
-from .views import NotificationsView, create_notification_rule
+from .views import NotificationsView, create_notification_rule, send_notification
 
 urlpatterns = [
     path(
@@ -19,4 +19,5 @@ urlpatterns = [
         name="settings",
     ),
     path("api/notifications/rule/", create_notification_rule, name="create_notification_rule"),
+    path("api/notifications/send/", send_notification, name="send_notification"),
 ]
