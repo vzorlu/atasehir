@@ -23,8 +23,8 @@ class WhatsappSettingsInline(admin.StackedInline):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("title", "type", "user", "department", "created_at", "read")
-    list_filter = ("type", "read", "created_at", "department")
+    list_display = ("title", "type", "user", "department", "created_at", "read", "severity")
+    list_filter = ("type", "read", "created_at", "department", "severity")
     search_fields = ("title", "message", "class_field")
     inlines = [MailSettingsInline, SmsSettingsInline, WhatsappSettingsInline]
     ordering = ("-created_at",)
