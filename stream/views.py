@@ -10,6 +10,9 @@ from .serializers import StreamImageSerializer, DetectionSerializer
 from ultralytics import YOLO
 from django.db.models import Count, Exists, OuterRef
 from rest_framework.filters import OrderingFilter
+from apps.notification.views import send_notification
+from rest_framework.test import APIRequestFactory
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -90,18 +93,30 @@ class StreamImageViewSet(viewsets.ModelViewSet):
             logger.info("Step 4: YOLO detection started")
             results = yolo_model.predict(source=temp_file.name)
 
-            # Create Detection objects
+            # Create Detection objects and trigger notifications
             for r in results[0].boxes.data:
                 x1, y1, x2, y2, conf, cls = r.tolist()
+                class_name = results[0].names[int(cls)]
+
+                # Create Detection object
                 Detection.objects.create(
                     image=stream_image,
-                    class_name=results[0].names[int(cls)],
+                    class_name=class_name,
                     x_min=float(x1),
                     y_min=float(y1),
                     x_max=float(x2),
                     y_max=float(y2),
                     confidence=float(conf),
                 )
+
+                # Trigger notification system
+                try:
+                    factory = APIRequestFactory()
+                    request = factory.post("/api/notifications/send/", {"class_field": class_name}, format="json")
+                    response = send_notification(request)
+                    logger.info(f"Notification for {class_name}: {json.loads(response.content)}")
+                except Exception as e:
+                    logger.error(f"Error sending notification for {class_name}: {str(e)}")
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

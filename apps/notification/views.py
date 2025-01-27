@@ -4,8 +4,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import NotificationRuleSerializer
-from .models import NOTIFICATION_TYPES, MailSettings, SmsSettings, WhatsappSettings
+from .models import NOTIFICATION_TYPES
 from .models import Notification
+from django.core.mail import send_mail
+from django.conf import settings
+from twilio.rest import Client
 
 
 class NotificationsView(TemplateView):
@@ -21,17 +24,7 @@ class NotificationsView(TemplateView):
 def create_notification_rule(request):
     serializer = NotificationRuleSerializer(data=request.data)
     if serializer.is_valid():
-        notification = serializer.save()
-
-        # Create settings if channels are selected
-        if "channels" in request.data:
-            channels = request.data.getlist("channels[]")
-            if "email" in channels:
-                MailSettings.objects.create(notification=notification)
-            if "sms" in channels:
-                SmsSettings.objects.create(notification=notification)
-            if "whatsapp" in channels:
-                WhatsappSettings.objects.create(notification=notification)
+        serializer.save()
 
         return Response({"success": True}, status=status.HTTP_201_CREATED)
     return Response({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -56,19 +49,38 @@ def send_notification(request):
         for channel in channels:
             try:
                 if channel.name == NOTIFICATION_TYPES.EMAIL:
-                    mail_settings = notification.mail_settings
-                    # Send email logic
-                    results.append({"channel": "email", "status": "sent"})
-
+                    try:
+                        send_mail(
+                            subject=notification.title,
+                            message=notification.message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[notification.recipient],
+                            fail_silently=False,
+                        )
+                        results.append({"channel": "email", "status": "sent"})
+                    except Exception as e:
+                        results.append({"channel": "email", "status": "failed", "error": str(e)})
                 elif channel.name == NOTIFICATION_TYPES.SMS:
-                    sms_settings = notification.sms_settings
-                    # Send SMS logic
-                    results.append({"channel": "sms", "status": "sent"})
+                    try:
+                        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                        message = client.messages.create(
+                            body=notification.message, from_=settings.TWILIO_PHONE_NUMBER, to=notification.recipient
+                        )
+                        results.append({"channel": "sms", "status": "sent", "message_sid": message.sid})
+                    except Exception as e:
+                        results.append({"channel": "sms", "status": "failed", "error": str(e)})
 
                 elif channel.name == NOTIFICATION_TYPES.WHATSAPP:
-                    wa_settings = notification.whatsapp_settings
-                    # Send WhatsApp logic
-                    results.append({"channel": "whatsapp", "status": "sent"})
+                    try:
+                        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+                        message = client.messages.create(
+                            from_=f"whatsapp:{settings.TWILIO_WHATSAPP_NUMBER}",
+                            body=notification.message,
+                            to=f"whatsapp:{notification.recipient}",
+                        )
+                        results.append({"channel": "whatsapp", "status": "sent", "message_sid": message.sid})
+                    except Exception as e:
+                        results.append({"channel": "whatsapp", "status": "failed", "error": str(e)})
 
             except Exception as e:
                 results.append({"channel": channel.name, "status": "failed", "error": str(e)})
