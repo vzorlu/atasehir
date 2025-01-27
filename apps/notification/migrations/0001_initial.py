@@ -30,4 +30,11 @@ class Migration(migrations.Migration):
                 "ordering": ["-created_at"],
             },
         ),
+        migrations.CreateModel(
+            name="Service",
+            fields=[
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False)),
+                # ...service fields...
+            ],
+        ),
     ]
