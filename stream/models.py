@@ -1,5 +1,5 @@
 from django.db import models
-from apps.notification.models import Notification, NOTIFICATION_TYPES
+from apps.notification.models import Notification
 
 
 class StreamImage(models.Model):
@@ -30,13 +30,6 @@ class Detection(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Only on creation
-            notification = Notification.objects.create(
-                type=NOTIFICATION_TYPES.INFO,
-                title=f"New {self.class_name} Detection",
-                message=f"Detected {self.class_name} with {self.confidence:.2f} confidence",
-            )
-            self.notification = notification
         super().save(*args, **kwargs)
 
     def __str__(self):

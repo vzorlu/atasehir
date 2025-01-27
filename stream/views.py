@@ -103,7 +103,6 @@ class StreamImageViewSet(viewsets.ModelViewSet):
                     confidence=float(conf),
                 )
 
-            logger.info("Step 5: YOLO detection completed")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:

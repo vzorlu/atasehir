@@ -7,12 +7,6 @@
       "slug": "dashboard-analytics"
     },
     {
-      "url": "services-sources",
-      "name": "Yayın İzleme",
-      "slug": "dashboard-source",
-      "icon": "menu-icon tf-icons ti ti-video"
-    },
-    {
       "url": "harita-raporlari",
       "name": "Harita Raporları",
       "slug": "harita-raporlari",

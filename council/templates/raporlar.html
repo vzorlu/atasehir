@@ -300,24 +300,24 @@ document.querySelectorAll('.view-notification, .add-notification').forEach(butto
                     </td>
                     <td>
                       {% if detection.notification or notification_rules|get_item:detection.class_name %}
-    <button type="button"
-            class="btn btn-sm btn-outline-primary view-notification"
-            data-detection-id="{{ detection.id }}"
-            data-class-name="{{ detection.class_name }}"
-            data-notification-type="{{ notification_rules|get_item:detection.class_name|get_item:'type' }}"
-            data-notification-title="{{ notification_rules|get_item:detection.class_name|get_item:'title' }}"
-            data-notification-message="{{ notification_rules|get_item:detection.class_name|get_item:'message' }}"
-            data-notification-department="{{ notification_rules|get_item:detection.class_name|get_item:'department' }}">
-        <i class="fas fa-bell"></i> Bildirimi Görüntüle
-    </button>
-{% else %}
-    <button type="button"
-            class="btn btn-sm btn-outline-primary add-notification"
-            data-detection-id="{{ detection.id }}"
-            data-class-name="{{ detection.class_name }}">
-        <i class="fas fa-plus"></i> Bildirim Ekle
-    </button>
-{% endif %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary view-notification"
+                                data-detection-id="{{ detection.id }}"
+                                data-class-name="{{ detection.class_name }}"
+                                data-notification-type="{{ notification_rules|get_item:detection.class_name|get_item:'type' }}"
+                                data-notification-title="{{ notification_rules|get_item:detection.class_name|get_item:'title' }}"
+                                data-notification-message="{{ notification_rules|get_item:detection.class_name|get_item:'message' }}"
+                                data-notification-department="{{ notification_rules|get_item:detection.class_name|get_item:'department' }}">
+                            <i class="fas fa-bell"></i> Bildirimi Görüntüle
+                        </button>
+                      {% else %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-primary add-notification"
+                                data-detection-id="{{ detection.id }}"
+                                data-class-name="{{ detection.class_name }}">
+                            <i class="fas fa-plus"></i> Bildirim Ekle
+                        </button>
+                      {% endif %}
                     </td>
                   </tr>
                   {% endfor %}
