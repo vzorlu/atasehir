@@ -29,9 +29,6 @@ class Detection(models.Model):
         Notification, on_delete=models.SET_NULL, null=True, blank=True, related_name="detections"
     )
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f"Detection {self.id} - {self.class_name}"
 
