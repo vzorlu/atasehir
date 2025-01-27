@@ -34,3 +34,6 @@ class Detection(models.Model):
 
     def __str__(self):
         return f"Detection {self.id} - {self.class_name}"
+
+
+#
